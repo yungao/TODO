@@ -1,0 +1,32 @@
+#######################################################
+############# 1. GoWeb框架: Martini ###################
+#
+#   GitHub:     https://github.com/go-martini/martini
+#   Install:    go get github.com/go-martini/martini
+#
+#######################################################
+
+
+#######################################################
+########### 2. MySQL驱动: Go-MySQL-Driver #############
+#
+#   GitHub:     https://github.com/go-sql-driver/mysql
+#   Install:    go get github.com/go-sql-driver/mysql
+#
+#######################################################
+
+
+#######################################################
+################## 3. SQL ORM库: Gorp #################
+#
+#   GitHub:     https://github.com/coopernurse/gorp
+#   Install:    go get github.com/coopernurse/gorp
+#
+#######################################################
+
+
+"github.com/martini-contrib/binding"
+"github.com/martini-contrib/render"
+"github.com/codegangsta/envy/lib"
+"github.com/martini-contrib/auth"
+
