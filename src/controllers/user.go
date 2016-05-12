@@ -1,4 +1,4 @@
-package controller
+package controllers
 
 import (
     "strconv"
@@ -9,29 +9,32 @@ import (
     "github.com/go-martini/martini"
     "github.com/coopernurse/gorp"
     "github.com/martini-contrib/render"
+    "github.com/martini-contrib/sessions"
+    "github.com/martini-contrib/sessionauth"
     //"github.com/martini-contrib/binding"
 
-    "model"
+    model   "models"
 )
 
 /**
 * create a new user
 *
-* errno:    11002: name is nil
-*           11003: pwd is nil
-*           11001: add failed
+* errno:    
+*           11000: add failed
+*           11001: name is nil
+*           11002: pwd is nil
 */
 func CreateUser(user model.User, db *gorp.DbMap, render render.Render) {
     log.Println("Add User {Name: " + user.Name + ", Pwd: " + user.Pwd + "}")
     if user.Name == "" {
-        erp := model.Error{Errno: 11002, Msg: "User name can not be Null!"}
+        erp := model.Error{Errno: 11001, Msg: "User name can not be Null!"}
         // erp.Error();
         // render.JSON(422, map[string]interface{}{"result": false, "errno": 11001, "msg": "User name can not be Null!"})
         render.JSON(422, erp)
         return
     }
     if user.Pwd == "" {
-        erp := model.Error{Errno: 11003, Msg: "User password can not be Null!"}
+        erp := model.Error{Errno: 11002, Msg: "User password can not be Null!"}
         render.JSON(422, erp)
         return
     }
@@ -41,8 +44,39 @@ func CreateUser(user model.User, db *gorp.DbMap, render render.Render) {
         render.JSON(201, &user)
     } else {
         log.Printf("Create user error: %s", err.Error())
-        erp := model.Error{Errno: 11001, Msg: "Create user failed!"}
+        erp := model.Error{Errno: 11000, Msg: "Create user failed!"}
         render.JSON(422, erp)
+    }
+}
+
+/**
+* user login
+*
+* errno:    
+*           11010: login failed
+*           11011: user does not exist
+*           11012: user password error
+*/
+func Login(session sessions.Session, user model.User, db *gorp.DbMap, render render.Render) {
+    var dbUser = model.User{}
+    err := db.SelectOne(&dbUser, "SELECT * FROM user WHERE name=?", user.Name)
+    if err != nil {
+        log.Printf("Login error: User[%s] does not exist", user.Name)
+        erp := model.Error{Errno: 11011, Msg: "User does not exist!"}
+        render.JSON(422, erp)
+    } else {
+        if dbUser.Pwd != user.Pwd {
+            log.Printf("Login error: User[%s]'s password[%s] error", user.Name, user.Pwd)
+            erp := model.Error{Errno: 11012, Msg: "User password error!"}
+            render.JSON(422, erp)
+        } else {
+            err = sessionauth.AuthenticateSession(session, &dbUser)
+            if err != nil {
+                render.JSON(500, err)
+            } else {
+                render.JSON(200, dbUser)
+            }
+        }
     }
 }
 
@@ -93,7 +127,13 @@ func DeleteUser(db *gorp.DbMap, params martini.Params, render render.Render) {
 *
 * errno:    11031: list user failed
 */
-func ListUser(db *gorp.DbMap, params martini.Params, render render.Render, request *http.Request) {
+func ListUser(user sessionauth.User, db *gorp.DbMap, params martini.Params, render render.Render, request *http.Request) {
+    log.Printf("User from session: %s", user)
+    if user == nil || !user.IsAuthenticated() {
+        render.JSON(401, "Unauthenticated")
+        return
+    }
+
     query := request.URL.Query()
     var limit, offset string
 
