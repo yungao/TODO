@@ -10,44 +10,59 @@ import (
     "github.com/coopernurse/gorp"
     "github.com/martini-contrib/render"
     "github.com/martini-contrib/sessions"
-    "github.com/martini-contrib/sessionauth"
     //"github.com/martini-contrib/binding"
 
     model   "models"
+    utils   "utils"
+)
+
+const (
+    // request failed
+    ERR_REQUEST_FAILED  =   40100
+
+    // ERR_INVALID_NAME    =   40011
+    // ERR_INVALID_PWD     =   40012
+    ERR_NAME_EXIST      =   40013
+
 )
 
 /**
-* create a new user
-*
-* errno:    
-*           11000: add failed
-*           11001: name is nil
-*           11002: pwd is nil
+* Create a new user, to user register
 */
-func CreateUser(user model.User, db *gorp.DbMap, render render.Render) {
-    log.Println("Add User {Name: " + user.Name + ", Pwd: " + user.Pwd + "}")
-    if user.Name == "" {
-        erp := model.Error{Errno: 11001, Msg: "User name can not be Null!"}
-        // erp.Error();
-        // render.JSON(422, map[string]interface{}{"result": false, "errno": 11001, "msg": "User name can not be Null!"})
-        render.JSON(422, erp)
-        return
-    }
-    if user.Pwd == "" {
-        erp := model.Error{Errno: 11002, Msg: "User password can not be Null!"}
-        render.JSON(422, erp)
-        return
-    }
+func CreateUser(session sessions.Session, user model.User, db *gorp.DbMap, render render.Render) {
+    log.Println("Create User {Name: " + user.Name + ", Pwd: " + user.Pwd + "}")
 
     err := db.Insert(&user)
     if err == nil {
         render.JSON(201, &user)
     } else {
         log.Printf("Create user error: %s", err.Error())
-        erp := model.Error{Errno: 11000, Msg: "Create user failed!"}
+        erp := model.Error{Errno: ERR_NAME_EXIST, Msg: "Username already exists!"}
         render.JSON(422, erp)
     }
 }
+
+/**
+* List user information
+*/
+func ListUser(session sessions.Session, db *gorp.DbMap, params martini.Params, render render.Render, request *http.Request) {
+    query := request.URL.Query()
+    name := query.Get("name")
+
+    if !utils.IsEmpty(name) {
+        var user = model.User{}
+        err := db.SelectOne(&user, "SELECT * FROM user WHERE name=?", name)
+        if err != nil {
+            render.JSON(200, "{}")
+        } else {
+            render.JSON(200, user)
+        }
+    } else {
+        erp := model.Error{Errno: ERR_REQUEST_FAILED, Msg: "Not Found!"}
+        render.JSON(404, erp)
+    }
+}
+
 
 /**
 * user login
@@ -70,12 +85,9 @@ func Login(session sessions.Session, user model.User, db *gorp.DbMap, render ren
             erp := model.Error{Errno: 11012, Msg: "User password error!"}
             render.JSON(422, erp)
         } else {
-            err = sessionauth.AuthenticateSession(session, &dbUser)
-            if err != nil {
-                render.JSON(500, err)
-            } else {
-                render.JSON(200, dbUser)
-            }
+            session.Set("ID", dbUser.ID)
+            log.Printf("Login Session: %s]", session)
+            render.JSON(200, dbUser)
         }
     }
 }
@@ -118,39 +130,6 @@ func DeleteUser(db *gorp.DbMap, params martini.Params, render render.Render) {
     } else {
         log.Printf("Delete user error: %s", err.Error())
         erp := model.Error{Errno: 11021, Msg: "Delete user failed!"}
-        render.JSON(404, erp)
-    }
-}
-
-/**
-* List all user information
-*
-* errno:    11031: list user failed
-*/
-func ListUser(user sessionauth.User, db *gorp.DbMap, params martini.Params, render render.Render, request *http.Request) {
-    log.Printf("User from session: %s", user)
-    if user == nil || !user.IsAuthenticated() {
-        render.JSON(401, "Unauthenticated")
-        return
-    }
-
-    query := request.URL.Query()
-    var limit, offset string
-
-    if query.Get("limit") != "" {
-        limit = " LIMIT " + query.Get("limit")
-    }
-    if query.Get("offset") != "" {
-        offset = " OFFSET " + query.Get("offset")
-    }
-
-    var users []model.User
-    _, err := db.Select(&users, "SELECT * FROM user" + limit + offset)
-    if err == nil {
-        render.JSON(200, users)
-    } else {
-        log.Printf("List user error: %s", err.Error())
-        erp := model.Error{Errno: 11031, Msg: "List user failed!"}
         render.JSON(404, erp)
     }
 }
