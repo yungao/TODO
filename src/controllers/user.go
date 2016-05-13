@@ -50,13 +50,16 @@ func ListUser(session sessions.Session, db *gorp.DbMap, params martini.Params, r
     name := query.Get("name")
 
     if !utils.IsEmpty(name) {
-        var user = model.User{}
-        err := db.SelectOne(&user, "SELECT * FROM user WHERE name=?", name)
-        if err != nil {
-            render.JSON(200, "{}")
-        } else {
-            render.JSON(200, user)
-        }
+        //_, err := utils.ParseSession(session, render)
+        //if err == nil {
+            var user = model.User{}
+            err := db.SelectOne(&user, "SELECT * FROM user WHERE name=?", name)
+            if err != nil {
+                render.JSON(200, "{}")
+            } else {
+                render.JSON(200, user)
+            }
+        //}
     } else {
         erp := model.Error{Errno: ERR_REQUEST_FAILED, Msg: "Not Found!"}
         render.JSON(404, erp)
