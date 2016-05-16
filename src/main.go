@@ -26,6 +26,8 @@ func main() {
 
 	// set asset directory
 	app.Use(martini.Static("assets"))
+	// use martini logger
+	app.Use(martini.Logger())
 	// use martini-contrib/render
 	app.Use(render.Renderer())
 	// use martini-contrib/sessions

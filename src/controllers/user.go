@@ -37,7 +37,7 @@ func CreateUser(session sessions.Session, user model.User, db *gorp.DbMap, rende
         render.JSON(201, &user)
     } else {
         log.Printf("Create user error: %s", err.Error())
-        erp := model.Error{Errno: ERR_NAME_EXIST, Msg: "Username already exists!"}
+        erp := model.Error{Code: ERR_NAME_EXIST, Msg: "Username already exists!"}
         render.JSON(422, erp)
     }
 }
@@ -61,7 +61,7 @@ func ListUser(session sessions.Session, db *gorp.DbMap, params martini.Params, r
             }
         //}
     } else {
-        erp := model.Error{Errno: ERR_REQUEST_FAILED, Msg: "Not Found!"}
+        erp := model.Error{Code: ERR_REQUEST_FAILED, Msg: "Not Found!"}
         render.JSON(404, erp)
     }
 }
@@ -70,7 +70,7 @@ func ListUser(session sessions.Session, db *gorp.DbMap, params martini.Params, r
 /**
 * user login
 *
-* errno:    
+* Code:    
 *           11010: login failed
 *           11011: user does not exist
 *           11012: user password error
@@ -80,12 +80,12 @@ func Login(session sessions.Session, user model.User, db *gorp.DbMap, render ren
     err := db.SelectOne(&dbUser, "SELECT * FROM user WHERE name=?", user.Name)
     if err != nil {
         log.Printf("Login error: User[%s] does not exist", user.Name)
-        erp := model.Error{Errno: 11011, Msg: "User does not exist!"}
+        erp := model.Error{Code: 11011, Msg: "User does not exist!"}
         render.JSON(422, erp)
     } else {
         if dbUser.Pwd != user.Pwd {
             log.Printf("Login error: User[%s]'s password[%s] error", user.Name, user.Pwd)
-            erp := model.Error{Errno: 11012, Msg: "User password error!"}
+            erp := model.Error{Code: 11012, Msg: "User password error!"}
             render.JSON(422, erp)
         } else {
             session.Set("ID", dbUser.ID)
@@ -98,7 +98,7 @@ func Login(session sessions.Session, user model.User, db *gorp.DbMap, render ren
 /**
 * Get user information
 *
-* errno:    11011: user does not exist
+* Code:    11011: user does not exist
 */
 func GetUser(db *gorp.DbMap, params martini.Params, render render.Render) {
     id, err := strconv.ParseInt(params["id"], 0, 64)
@@ -111,7 +111,7 @@ func GetUser(db *gorp.DbMap, params martini.Params, render render.Render) {
         render.JSON(200, user)
     } else {
         log.Printf("Get user error: %s", err.Error())
-        erp := model.Error{Errno: 11011, Msg: "User does not exist!"}
+        erp := model.Error{Code: 11011, Msg: "User does not exist!"}
         render.JSON(404, erp)
     }
 }
@@ -119,7 +119,7 @@ func GetUser(db *gorp.DbMap, params martini.Params, render render.Render) {
 /**
 * Delete user
 *
-* errno:    11021: delete user failed
+* Code:    11021: delete user failed
 */
 func DeleteUser(db *gorp.DbMap, params martini.Params, render render.Render) {
     id, err := strconv.ParseInt(params["id"], 0, 64)
@@ -132,7 +132,7 @@ func DeleteUser(db *gorp.DbMap, params martini.Params, render render.Render) {
         render.JSON(204, "No Content")
     } else {
         log.Printf("Delete user error: %s", err.Error())
-        erp := model.Error{Errno: 11021, Msg: "Delete user failed!"}
+        erp := model.Error{Code: 11021, Msg: "Delete user failed!"}
         render.JSON(404, erp)
     }
 }
@@ -140,13 +140,13 @@ func DeleteUser(db *gorp.DbMap, params martini.Params, render render.Render) {
 /**
 * Change user password
 *
-* errno:    11041: changed password failed
+* Code:    11041: changed password failed
 */
 func changeUserPwd(db *gorp.DbMap, render render.Render, id int64, pwd string) {
     _, err := db.Exec("UPDATE user SET pwd = ? WHERE id = ?", pwd, id)
     if err != nil {
         log.Printf("Change password error: %s", err.Error())
-        erp := model.Error{Errno: 11041, Msg: "Change user password failed!"}
+        erp := model.Error{Code: 11041, Msg: "Change user password failed!"}
         render.JSON(404, erp)
     } else {
         render.JSON(201, "OK")

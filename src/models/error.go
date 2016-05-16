@@ -5,7 +5,7 @@ import (
 )
 
 type Error struct {
-    Errno   int             `json:"errno"`
+    Code    int             `json:"code"`
     Msg     string          `json:"msg"`
 }
 
@@ -14,5 +14,13 @@ func (err *Error) Error() string {
         return ""
     }
 
-    return fmt.Sprintf("errno:%d, msg:%s", err.Errno, err.Msg)
+    return fmt.Sprintf("[%d] %s", err.Code, err.Msg)
+}
+
+// NewError creates an error instance with the specified code and message.
+func NewError(code int, msg string) *Error {
+    return &Error{
+        Code:   code,
+        Msg:    msg,
+    }
 }
