@@ -129,7 +129,7 @@ func DeleteUser(db *gorp.DbMap, params martini.Params, render render.Render) {
 	if err == nil {
 		render.JSON(204, "No Content")
 	} else {
-		log.Printf("Delete user error: %s", err.Error())
+		log.Printf("Delete tb_users error: %s", err.Error())
 		erp := model.Error{Code: 11021, Msg: "Delete user failed!"}
 		render.JSON(404, erp)
 	}
@@ -141,7 +141,7 @@ func DeleteUser(db *gorp.DbMap, params martini.Params, render render.Render) {
 * Code:    11041: changed password failed
  */
 func changeUserPwd(db *gorp.DbMap, render render.Render, id int, pwd string) {
-	_, err := db.Exec("UPDATE user SET pwd = ? WHERE id = ?", pwd, id)
+	_, err := db.Exec("UPDATE tb_users SET pwd = ? WHERE id = ?", pwd, id)
 	if err != nil {
 		log.Printf("Change password error: %s", err.Error())
 		erp := model.Error{Code: 11041, Msg: "Change user password failed!"}

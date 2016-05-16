@@ -13,6 +13,7 @@ import (
 
 func initDBTables(db *gorp.DbMap) {
 	model.CreateUserTable(db)
+	model.CreateTodoTable(db)
 }
 
 func enableDBLogger(db *gorp.DbMap) {
