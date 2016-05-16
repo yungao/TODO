@@ -1,30 +1,24 @@
 package config
 
 import (
-    "log"
-    "os"
-    "database/sql"
+	"database/sql"
+	"log"
+	"os"
 
-    "github.com/coopernurse/gorp"
-    _ "github.com/go-sql-driver/mysql"
+	"github.com/coopernurse/gorp"
+	_ "github.com/go-sql-driver/mysql"
 
-    model   "models"
+	model "models"
 )
 
 func initDBTables(db *gorp.DbMap) {
-    // Add [user] table
-    tb := db.AddTableWithName(model.User{}, "user").SetKeys(true, "ID")
-    tb.ColMap("name").SetUnique(true)
-
-    db.CreateTables()
-    //db.DropTables()
+	model.CreateUserTable(db)
 }
 
 func enableDBLogger(db *gorp.DbMap) {
-    db.TraceOn("[gorp]", log.New(os.Stdout, ">>MySQL<< ", log.Lmicroseconds))
-    //dbp.TraceOff()
+	db.TraceOn("[gorp]", log.New(os.Stdout, ">>MySQL<< ", log.Lmicroseconds))
+	//dbp.TraceOff()
 }
-
 
 //var dbMap *gorp.DbMap
 //
@@ -37,16 +31,16 @@ func enableDBLogger(db *gorp.DbMap) {
 //}
 
 func DB() *gorp.DbMap {
-    conn, err := sql.Open("mysql", "root:@/goweb")
+	conn, err := sql.Open("mysql", "root:@/gotodo")
 
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
-    dbMap := &gorp.DbMap{Db: conn, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
+	dbMap := &gorp.DbMap{Db: conn, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 
-    initDBTables(dbMap);
-    enableDBLogger(dbMap);
+	initDBTables(dbMap)
+	enableDBLogger(dbMap)
 
-    return dbMap
+	return dbMap
 }
