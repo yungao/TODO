@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/base64"
 	"errors"
 	"log"
 	"strconv"
@@ -38,4 +39,17 @@ func ParseSession(session sessions.Session, render render.Render) (int64, error)
 
 func IsEmpty(s string) bool {
 	return (strings.TrimSpace(s) == "")
+}
+
+func Base64Encode(str string) string {
+	return base64.StdEncoding.EncodeToString([]byte(str))
+}
+
+func Base64Decode(str string) (string, error) {
+	data, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
 }

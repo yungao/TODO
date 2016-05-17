@@ -1,10 +1,14 @@
 package models
 
 import (
-	"config"
 	"github.com/coopernurse/gorp"
+
+	"fmt"
 	"log"
 	"time"
+
+	"config"
+	"utils"
 )
 
 type User struct {
@@ -35,6 +39,24 @@ type Users struct {
 	Collection []User `json:"users"`
 }
 
+func newAdmin() *User {
+	return &User{
+		Name:      "admin",
+		Pwd:       "123456",
+		Nickname:  "管理员",
+		Email:     "admin@todo.com",
+		Authority: -1,
+		CreatorID: 0,
+		CreateAt:  time.Now().Unix(),
+		UpdateAt:  time.Now().Unix(),
+		Active:    0,
+	}
+}
+
+func (user *User) String() string {
+	return fmt.Sprintf("{ID:%d, Name:%s, Pwd:%s, Nickname:%s, Email:%s, Authority:%d, CreatorID:%d, CreateAt:%d, UpdateAt:%d, Active:%d}", user.ID, user.Name, user.Pwd, user.Nickname, user.Email, user.Authority, user.CreatorID, user.CreateAt, user.UpdateAt, user.Active)
+}
+
 // Create user table if not exist
 func CreateUserTable(db *gorp.DbMap) {
 	tb := db.AddTableWithName(User{}, config.TABLE_NAME_USER)
@@ -54,56 +76,22 @@ func CreateUserTable(db *gorp.DbMap) {
 	if err != nil {
 		panic(err)
 	}
-
 	log.Printf(">>> Table[%s] created", config.TABLE_NAME_USER)
+
+	// create super admin
+	db.Insert(newAdmin())
+	log.Println(">>> Admin user created")
 }
 
 func (user *User) PreInsert(s gorp.SqlExecutor) error {
 	user.CreateAt = time.Now().Unix()
 	user.UpdateAt = user.CreateAt
 	user.Active = 0
+	user.Pwd = utils.Base64Encode(user.Pwd)
 	return nil
 }
 
 func (user *User) PreUpdate(s gorp.SqlExecutor) error {
 	user.UpdateAt = time.Now().Unix()
-	return nil
-}
-
-type Partner struct {
-	ID     int `db:"id"        json:"id"`
-	TodoID int `db:"todoid"    json:"todoid"   form:"todoid"   binding:"required"`
-	UserID int `db:"uid"       json:"uid"      form:"name"     binding:"required"`
-	/* Active:
-	 *       -1: deleted
-	 *       1:  normal
-	 */
-	Active int8 `db:"active"    json:"active"`
-}
-
-type Partners struct {
-	Collection []Partner `json:"partners"`
-}
-
-// Create partner table if not exist
-func CreatePartnerTable(db *gorp.DbMap) {
-	tb := db.AddTableWithName(Partner{}, config.TABLE_NAME_TODO_PARTNER)
-	tb.SetKeys(true, "id")
-	tb.ColMap("todoid").SetNotNull(true)
-	tb.ColMap("uid").SetNotNull(true)
-	tb.SetUniqueTogether("todoid", "uid")
-	tb.ColMap("active").SetNotNull(true)
-
-	err := db.CreateTablesIfNotExists()
-	// db.DropTables()
-	if err != nil {
-		panic(err)
-	}
-
-	log.Printf(">>> Table[%s] created", config.TABLE_NAME_TODO_PARTNER)
-}
-
-func (partner *Partner) PreInsert(s gorp.SqlExecutor) error {
-	partner.Active = 1
 	return nil
 }

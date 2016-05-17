@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+    "regexp"
 	//"strings"
 
 	"github.com/coopernurse/gorp"
@@ -18,10 +19,10 @@ import (
 
 const (
 	// request failed
-	ERR_REQUEST_FAILED = 40100
+	ERR_REQUEST_FAILED  = 40100
 
-	// ERR_INVALID_NAME    =   40011
-	// ERR_INVALID_PWD     =   40012
+	ERR_INVALID_NAME    =   40011
+	ERR_INVALID_PWD     =   40012
 	ERR_NAME_EXIST = 40013
 )
 
@@ -29,14 +30,38 @@ const (
 * Create a new user, to user register
  */
 func CreateUser(session sessions.Session, user model.User, db *gorp.DbMap, render render.Render) {
-	log.Println("Create User {Name: " + user.Name + ", Pwd: " + user.Pwd + "}")
+    log.Println("Create User: ", user.String())
+
+    // check name
+    if len(user.Name) < 3 || len(user.Name) > 20 {
+		erp := model.Error{Code: ERR_INVALID_NAME, Msg: "Name must be 3-20 characters!"}
+		render.JSON(422, erp)
+        return
+    }
+    if m, _ := regexp.MatchString("^[0-9a-zA-Z_]+$", user.Name); !m {
+		erp := model.Error{Code: ERR_INVALID_NAME, Msg: "Name must be [0-9a-zA-Z_]!"}
+		render.JSON(422, erp)
+        return
+    }
+
+    // check password
+    if len(user.Pwd) < 3 || len(user.Pwd) > 20 {
+		erp := model.Error{Code: ERR_INVALID_PWD, Msg: "Password must be 3-20 characters!"}
+		render.JSON(422, erp)
+        return
+    }
+    if m, _ := regexp.MatchString("^[0-9a-zA-Z_]+$", user.Pwd); !m {
+		erp := model.Error{Code: ERR_INVALID_PWD, Msg: "Password must be [0-9a-zA-Z_]!"}
+		render.JSON(422, erp)
+        return
+    }
 
 	err := db.Insert(&user)
 	if err == nil {
 		render.JSON(201, &user)
 	} else {
 		log.Printf("Create user error: %s", err.Error())
-		erp := model.Error{Code: ERR_NAME_EXIST, Msg: "Username already exists!"}
+		erp := model.Error{Code: ERR_NAME_EXIST, Msg: "Name already exists!"}
 		render.JSON(422, erp)
 	}
 }
