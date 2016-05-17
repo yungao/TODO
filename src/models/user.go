@@ -1,6 +1,7 @@
 package models
 
 import (
+	"config"
 	"github.com/coopernurse/gorp"
 	"log"
 	"time"
@@ -36,7 +37,7 @@ type Users struct {
 
 // Create user table if not exist
 func CreateUserTable(db *gorp.DbMap) {
-	tb := db.AddTableWithName(User{}, "tb_users")
+	tb := db.AddTableWithName(User{}, config.TABLE_NAME_USER)
 	tb.SetKeys(true, "id")
 	tb.ColMap("name").SetMaxSize(20).SetUnique(true).SetNotNull(true)
 	tb.ColMap("pwd").SetMaxSize(20).SetNotNull(true)
@@ -54,7 +55,7 @@ func CreateUserTable(db *gorp.DbMap) {
 		panic(err)
 	}
 
-	log.Println(">>> Table[tb_users] created")
+	log.Printf(">>> Table[%s] created", config.TABLE_NAME_USER)
 }
 
 func (user *User) PreInsert(s gorp.SqlExecutor) error {
@@ -66,5 +67,43 @@ func (user *User) PreInsert(s gorp.SqlExecutor) error {
 
 func (user *User) PreUpdate(s gorp.SqlExecutor) error {
 	user.UpdateAt = time.Now().Unix()
+	return nil
+}
+
+type Partner struct {
+	ID     int `db:"id"        json:"id"`
+	TodoID int `db:"todoid"    json:"todoid"   form:"todoid"   binding:"required"`
+	UserID int `db:"uid"       json:"uid"      form:"name"     binding:"required"`
+	/* Active:
+	 *       -1: deleted
+	 *       1:  normal
+	 */
+	Active int8 `db:"active"    json:"active"`
+}
+
+type Partners struct {
+	Collection []Partner `json:"partners"`
+}
+
+// Create partner table if not exist
+func CreatePartnerTable(db *gorp.DbMap) {
+	tb := db.AddTableWithName(Partner{}, config.TABLE_NAME_TODO_PARTNER)
+	tb.SetKeys(true, "id")
+	tb.ColMap("todoid").SetNotNull(true)
+	tb.ColMap("uid").SetNotNull(true)
+	tb.SetUniqueTogether("todoid", "uid")
+	tb.ColMap("active").SetNotNull(true)
+
+	err := db.CreateTablesIfNotExists()
+	// db.DropTables()
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf(">>> Table[%s] created", config.TABLE_NAME_TODO_PARTNER)
+}
+
+func (partner *Partner) PreInsert(s gorp.SqlExecutor) error {
+	partner.Active = 1
 	return nil
 }

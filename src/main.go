@@ -5,10 +5,10 @@ import (
 	// "os"
 	// "net/http"
 
+	"github.com/coopernurse/gorp"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/binding"
 	"github.com/martini-contrib/render"
-	// "github.com/coopernurse/gorp"
 	"github.com/martini-contrib/sessions"
 	// "github.com/codegangsta/envy/lib"
 
@@ -17,12 +17,25 @@ import (
 	model "models"
 )
 
+func initDBTables(db *gorp.DbMap) {
+	model.CreateUserTable(db)
+	model.CreatePartnerTable(db)
+	model.CreateTodoTable(db)
+	model.CreateTagTable(db)
+	model.CreateTodoTagTable(db)
+	model.CreateProcessTable(db)
+	model.CreateAttachTable(db)
+}
+
 func main() {
 	//envy.Bootstrap()
 
 	app := martini.Classic()
 	// initialization database
-	app.Map(config.DB())
+	db := config.DB()
+	initDBTables(db)
+	config.EnableDBLogger(db)
+	app.Map(db)
 
 	// set asset directory
 	app.Use(martini.Static("assets"))

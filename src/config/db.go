@@ -7,20 +7,20 @@ import (
 
 	"github.com/coopernurse/gorp"
 	_ "github.com/go-sql-driver/mysql"
-
-	model "models"
 )
 
-func initDBTables(db *gorp.DbMap) {
-	model.CreateUserTable(db)
-	model.CreateTodoTable(db)
-	model.CreateTagTable(db)
-	model.CreateTodoTagTable(db)
-	model.CreateProcessTable(db)
-}
+const (
+	TABLE_NAME_USER         = "tb_users"
+	TABLE_NAME_TAGS         = "tb_tags"
+	TABLE_NAME_TODOS        = "tb_todos"
+	TABLE_NAME_TODO_PARTNER = "tb_todo_partners"
+	TABLE_NAME_TODO_PROCESS = "tb_todo_process"
+	TABLE_NAME_TODO_TAGS    = "tb_todo_tags"
+    TABLE_NAME_TODO_ATTACHS = "tb_todo_attachs"
+)
 
-func enableDBLogger(db *gorp.DbMap) {
-	db.TraceOn("[gorp]", log.New(os.Stdout, ">>MySQL<< ", log.Lmicroseconds))
+func EnableDBLogger(db *gorp.DbMap) {
+	db.TraceOn("[gorp]", log.New(os.Stdout, "[ MySQL ] ", log.Lmicroseconds))
 	//dbp.TraceOff()
 }
 
@@ -42,9 +42,6 @@ func DB() *gorp.DbMap {
 	}
 
 	dbMap := &gorp.DbMap{Db: conn, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
-
-	initDBTables(dbMap)
-	enableDBLogger(dbMap)
 
 	return dbMap
 }

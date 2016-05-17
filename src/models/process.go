@@ -1,6 +1,7 @@
 package models
 
 import (
+	"config"
 	"github.com/coopernurse/gorp"
 	"log"
 	"time"
@@ -39,7 +40,7 @@ type Processes struct {
 
 // Create process table if not exist
 func CreateProcessTable(db *gorp.DbMap) {
-	tb := db.AddTableWithName(Process{}, "tb_process")
+	tb := db.AddTableWithName(Process{}, config.TABLE_NAME_TODO_PROCESS)
 	tb.SetKeys(true, "id")
 	tb.ColMap("todoid").SetNotNull(true)
 	tb.ColMap("uid").SetNotNull(true)
@@ -58,7 +59,7 @@ func CreateProcessTable(db *gorp.DbMap) {
 		panic(err)
 	}
 
-	log.Println(">>> Table[tb_process] created")
+	log.Printf(">>> Table[%s] created", config.TABLE_NAME_TODO_PROCESS)
 }
 
 func (proc *Process) PreInsert(s gorp.SqlExecutor) error {

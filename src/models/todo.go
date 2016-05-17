@@ -1,6 +1,7 @@
 package models
 
 import (
+	"config"
 	"github.com/coopernurse/gorp"
 	"log"
 	"time"
@@ -40,7 +41,7 @@ type Todos struct {
 
 // Create todo table if not exist
 func CreateTodoTable(db *gorp.DbMap) {
-	tb := db.AddTableWithName(Todo{}, "tb_todos")
+	tb := db.AddTableWithName(Todo{}, config.TABLE_NAME_TODOS)
 	tb.SetKeys(true, "id")
 	tb.ColMap("name").SetMaxSize(100).SetNotNull(true)
 	tb.ColMap("title").SetMaxSize(255).SetNotNull(true)
@@ -60,7 +61,7 @@ func CreateTodoTable(db *gorp.DbMap) {
 		panic(err)
 	}
 
-	log.Println(">>> Table[tb_todos] created")
+	log.Printf(">>> Table[%s] created", config.TABLE_NAME_TODOS)
 }
 
 func (todo *Todo) PreInsert(s gorp.SqlExecutor) error {

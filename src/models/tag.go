@@ -1,6 +1,7 @@
 package models
 
 import (
+	"config"
 	"github.com/coopernurse/gorp"
 	"log"
 	"time"
@@ -10,7 +11,7 @@ type Tag struct {
 	ID        int    `db:"id"        json:"id"`
 	CreatorID int    `db:"uid"       json:"uid"`
 	Name      string `db:"name"      json:"name"        form:"name"     binding:"required"`
-	Remark    string `db:"remark"    json:"remark"`
+	Remark    string `db:"remark"    json:"remark"      form:"remark"`
 	CreateAt  int64  `db:"create"    json:"create"`
 	/* Active:
 	 *       -1: deleted
@@ -25,7 +26,7 @@ type Tags struct {
 
 // Create tag table if not exist
 func CreateTagTable(db *gorp.DbMap) {
-	tb := db.AddTableWithName(Tag{}, "tb_tags")
+	tb := db.AddTableWithName(Tag{}, config.TABLE_NAME_TAGS)
 	tb.SetKeys(true, "id")
 	tb.ColMap("uid").SetNotNull(true)
 	tb.ColMap("name").SetMaxSize(20).SetNotNull(true)
@@ -40,7 +41,7 @@ func CreateTagTable(db *gorp.DbMap) {
 		panic(err)
 	}
 
-	log.Println(">>> Table[tb_tags] created")
+	log.Printf(">>> Table[%s] created", config.TABLE_NAME_TAGS)
 }
 
 func (tag *Tag) PreInsert(s gorp.SqlExecutor) error {
@@ -71,7 +72,7 @@ type TodoTags struct {
 
 // Create todo tag table if not exist
 func CreateTodoTagTable(db *gorp.DbMap) {
-	tb := db.AddTableWithName(TodoTag{}, "tb_todo_tags")
+	tb := db.AddTableWithName(TodoTag{}, config.TABLE_NAME_TODO_TAGS)
 	tb.SetKeys(true, "id")
 	tb.ColMap("todoid").SetNotNull(true)
 	tb.ColMap("tagid").SetNotNull(true)
@@ -84,7 +85,7 @@ func CreateTodoTagTable(db *gorp.DbMap) {
 		panic(err)
 	}
 
-	log.Println(">>> Table[tb_todo_tags] created")
+	log.Printf(">>> Table[%s] created", config.TABLE_NAME_TODO_TAGS)
 }
 
 func (ttag *TodoTag) PreInsert(s gorp.SqlExecutor) error {
