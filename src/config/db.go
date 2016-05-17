@@ -14,6 +14,9 @@ import (
 func initDBTables(db *gorp.DbMap) {
 	model.CreateUserTable(db)
 	model.CreateTodoTable(db)
+	model.CreateTagTable(db)
+	model.CreateTodoTagTable(db)
+	model.CreateProcessTable(db)
 }
 
 func enableDBLogger(db *gorp.DbMap) {

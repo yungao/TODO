@@ -25,7 +25,7 @@ type Todo struct {
 	 *       1: done
 	 */
 	Status    int8 `db:"status"    json:"status"`
-	ProcCount int  `db:"count"     json:"count"`
+	ProcCount int  `db:"pcount"    json:"pcount"`
 	/* Active:
 	 *       -1: deleted
 	 *       0:  diabled
@@ -51,7 +51,7 @@ func CreateTodoTable(db *gorp.DbMap) {
 	tb.ColMap("limit").SetNotNull(true)
 	tb.ColMap("update").SetNotNull(true)
 	tb.ColMap("status").SetNotNull(true)
-	tb.ColMap("count").SetNotNull(true)
+	tb.ColMap("pcount").SetNotNull(true)
 	tb.ColMap("active").SetNotNull(true)
 
 	err := db.CreateTablesIfNotExists()
@@ -60,7 +60,7 @@ func CreateTodoTable(db *gorp.DbMap) {
 		panic(err)
 	}
 
-	log.Println(">>> Todo table created")
+	log.Println(">>> Table[tb_todos] created")
 }
 
 func (todo *Todo) PreInsert(s gorp.SqlExecutor) error {

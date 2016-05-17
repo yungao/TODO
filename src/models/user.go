@@ -44,8 +44,8 @@ func CreateUserTable(db *gorp.DbMap) {
 	tb.ColMap("email").SetMaxSize(100)
 	tb.ColMap("auth").SetNotNull(true)
 	tb.ColMap("uid").SetNotNull(true)
-	// tb.ColMap("create").SetNotNull(true)
-	// tb.ColMap("update").SetNotNull(true)
+	tb.ColMap("create").SetNotNull(true)
+	tb.ColMap("update").SetNotNull(true)
 	tb.ColMap("active").SetNotNull(true)
 
 	err := db.CreateTablesIfNotExists()
@@ -54,7 +54,7 @@ func CreateUserTable(db *gorp.DbMap) {
 		panic(err)
 	}
 
-	log.Println(">>> User table created")
+	log.Println(">>> Table[tb_users] created")
 }
 
 func (user *User) PreInsert(s gorp.SqlExecutor) error {

@@ -47,10 +47,10 @@ func main() {
 
 	app.Group("/api/v1", func(router martini.Router) {
 		// Http request unauthorized
-		//app.Get("/unauth", func(render render.Render) {
+		// app.Get("/unauth", func(render render.Render) {
 		//    // render.HTML(200, "login", nil)
 		//    render.JSON(401, "Please Login TODO first!")
-		//})
+		// })
 
 		app.Group("/user", func(router martini.Router) {
 			// Registered user
