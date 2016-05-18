@@ -66,8 +66,12 @@ func main() {
 		// })
 
 		app.Group("/user", func(router martini.Router) {
-			// Registered user
+			// registered user
 			router.Post("", binding.Bind(model.User{}), control.CreateUser)
+			// update user info
+			router.Patch("", control.UpdateUser)
+			router.Patch("/:id([(0-9)+])", control.UpdateUser)
+
 			// List user informations
 			router.Get("", control.ListUser)
 
@@ -86,6 +90,9 @@ func main() {
 				render.JSON(200, v)
 			})
 		})
+	})
+	app.NotFound(func(render render.Render) {
+		render.JSON(404, "Not Found!")
 	})
 	//======================================================
 

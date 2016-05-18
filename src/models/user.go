@@ -3,13 +3,17 @@ package models
 import (
 	"github.com/coopernurse/gorp"
 
+	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"config"
 	"utils"
 )
+
+const VALUE_ADMIN_AUTHORITY = -1
 
 type User struct {
 	ID       int    `db:"id"        json:"id"`
@@ -81,6 +85,87 @@ func CreateUserTable(db *gorp.DbMap) {
 	// create super admin
 	db.Insert(newAdmin())
 	log.Println(">>> Admin user created")
+}
+
+// verify name
+func VerifyName(name string) error {
+	nlen := len(name)
+	if nlen < 3 || nlen > 20 {
+		return errors.New("Name must be 3-20 characters!")
+	}
+
+	if m, _ := regexp.MatchString("^[0-9a-zA-Z_]+$", name); !m {
+		return errors.New("Name must be [0-9a-zA-Z_]!")
+	}
+
+	return nil
+}
+
+// verify password
+func VerifyPassword(pwd string) error {
+	plen := len(pwd)
+	if plen < 3 || plen > 20 {
+		return errors.New("Password must be 3-20 characters!")
+	}
+
+	if m, _ := regexp.MatchString("^[0-9a-zA-Z_]+$", pwd); !m {
+		return errors.New("Password must be [0-9a-zA-Z_]!")
+	}
+
+	return nil
+}
+
+// verify email
+func VerifyEmail(email string) error {
+	if m, _ := regexp.MatchString(`^([\w\.\_]{2,10})@(\w{1,}).([a-z]{2,4})$`, email); !m {
+		return errors.New("Invaild email address!")
+	}
+
+	return nil
+}
+
+// verify nickname
+func VerifyNickName(nick string) error {
+	if len(nick) > 100 {
+		return errors.New("Nickname must be less than 100 characters!")
+	}
+
+	return nil
+}
+
+/*
+* To determine whether the user is an administrator
+ */
+func DetermineAdmin(db *gorp.DbMap, id int) (*User, error) {
+	ret, err := db.Get(User{}, id)
+	log.Println("Login: ", ret)
+	if err != nil {
+		log.Printf("Login user does not exist: %s", err.Error())
+		return nil, errors.New("Login user does not exist!")
+	}
+
+	if user, ok := ret.(*User); ok && user.Authority == VALUE_ADMIN_AUTHORITY {
+		return user, nil
+	}
+
+	log.Printf("Create user with non-admin: %d", id)
+	return nil, errors.New("Must login with admin!")
+}
+
+/*
+* Query user info from database by ID
+ */
+func GetUserByID(db *gorp.DbMap, id int) (*User, error) {
+	ret, err := db.Get(User{}, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if user, ok := ret.(*User); ok {
+		return user, nil
+	}
+
+	return nil, errors.New("User does not exist!")
 }
 
 func (user *User) PreInsert(s gorp.SqlExecutor) error {

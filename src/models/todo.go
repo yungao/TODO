@@ -8,11 +8,12 @@ import (
 )
 
 type Todo struct {
-	ID       int    `db:"id"        json:"id"`
-	Name     string `db:"name"      json:"name"        form:"name"     binding:"required"`
-	Title    string `db:"title"     json:"title"       form:"title"    binding:"required"`
-	Content  string `db:"content"   json:"content"     form:"content"`
-	Priority int8   `db:"priority"  json:"priority"    form:"priority" binding:"required"`
+	ID        int    `db:"id"        json:"id"`
+	CreatorID int    `db:"uid"       json:"uid"`
+	Name      string `db:"name"      json:"name"        form:"name"     binding:"required"`
+	Title     string `db:"title"     json:"title"       form:"title"    binding:"required"`
+	Content   string `db:"content"   json:"content"     form:"content"`
+	Priority  int8   `db:"priority"  json:"priority"    form:"priority" binding:"required"`
 	/* Type:
 	 *       0:  public
 	 *       1:  private
@@ -43,6 +44,7 @@ type Todos struct {
 func CreateTodoTable(db *gorp.DbMap) {
 	tb := db.AddTableWithName(Todo{}, config.TABLE_NAME_TODOS)
 	tb.SetKeys(true, "id")
+	tb.ColMap("uid").SetNotNull(true)
 	tb.ColMap("name").SetMaxSize(100).SetNotNull(true)
 	tb.ColMap("title").SetMaxSize(255).SetNotNull(true)
 	tb.ColMap("content").SetMaxSize(2048)

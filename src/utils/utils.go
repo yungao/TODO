@@ -11,18 +11,18 @@ import (
 	"github.com/martini-contrib/sessions"
 )
 
-func ParseSession(session sessions.Session, render render.Render) (int64, error) {
+func ParseSession(session sessions.Session, render render.Render) (int, error) {
 	if session != nil {
 		sid := session.Get("ID")
 		log.Printf("Session, ID: %s", sid)
 
-		if id, ok := sid.(int64); ok {
+		if id, ok := sid.(int); ok {
 			log.Printf("Parse session, ID: %d", id)
 			return id, nil
 		}
 
 		if id, ok := sid.(string); ok {
-			id, err := strconv.ParseInt(id, 0, 64)
+			id, err := strconv.Atoi(id)
 			if err == nil {
 				log.Printf(">Parse session, ID: %d", id)
 				return id, nil

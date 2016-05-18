@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-    "regexp"
-	//"strings"
+	// "regexp"
+	// "strings"
 
 	"github.com/coopernurse/gorp"
 	"github.com/go-martini/martini"
@@ -19,50 +19,149 @@ import (
 
 const (
 	// request failed
-	ERR_REQUEST_FAILED  = 40100
+	ERR_REQUEST_FAILED = 40100
 
-	ERR_INVALID_NAME    =   40011
-	ERR_INVALID_PWD     =   40012
-	ERR_NAME_EXIST = 40013
+	ERR_INVALID_DATA = 40011
+	ERR_NAME_EXIST   = 40013
 )
 
 /**
 * Create a new user, to user register
  */
 func CreateUser(session sessions.Session, user model.User, db *gorp.DbMap, render render.Render) {
-    log.Println("Create User: ", user.String())
-
-    // check name
-    if len(user.Name) < 3 || len(user.Name) > 20 {
-		erp := model.Error{Code: ERR_INVALID_NAME, Msg: "Name must be 3-20 characters!"}
-		render.JSON(422, erp)
-        return
-    }
-    if m, _ := regexp.MatchString("^[0-9a-zA-Z_]+$", user.Name); !m {
-		erp := model.Error{Code: ERR_INVALID_NAME, Msg: "Name must be [0-9a-zA-Z_]!"}
-		render.JSON(422, erp)
-        return
-    }
-
-    // check password
-    if len(user.Pwd) < 3 || len(user.Pwd) > 20 {
-		erp := model.Error{Code: ERR_INVALID_PWD, Msg: "Password must be 3-20 characters!"}
-		render.JSON(422, erp)
-        return
-    }
-    if m, _ := regexp.MatchString("^[0-9a-zA-Z_]+$", user.Pwd); !m {
-		erp := model.Error{Code: ERR_INVALID_PWD, Msg: "Password must be [0-9a-zA-Z_]!"}
-		render.JSON(422, erp)
-        return
-    }
-
-	err := db.Insert(&user)
+	log.Println("Create User: ", user.String())
+	id, err := utils.ParseSession(session, render)
 	if err == nil {
-		render.JSON(201, &user)
-	} else {
-		log.Printf("Create user error: %s", err.Error())
-		erp := model.Error{Code: ERR_NAME_EXIST, Msg: "Name already exists!"}
-		render.JSON(422, erp)
+		_, err := model.DetermineAdmin(db, id)
+		if err != nil {
+			render.JSON(403, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+			return
+		}
+
+		// check name
+		if err = model.VerifyName(user.Name); err != nil {
+			render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+			return
+		}
+
+		// check password
+		if err = model.VerifyPassword(user.Pwd); err != nil {
+			render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+			return
+		}
+
+		// check email
+		if user.Email != "" {
+			if err = model.VerifyEmail(user.Email); err != nil {
+				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				return
+			}
+		}
+
+		user.CreatorID = id
+		err = db.Insert(&user)
+		if err == nil {
+			render.JSON(201, &user)
+		} else {
+			log.Printf("Create user error: %s", err.Error())
+			erp := model.Error{Code: ERR_NAME_EXIST, Msg: "Name already exists!"}
+			render.JSON(422, erp)
+		}
+	}
+}
+
+/*
+* Update user info
+ */
+func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params, render render.Render, request *http.Request) {
+	id, err := utils.ParseSession(session, render)
+	if err == nil { // has login
+		auth := request.FormValue("auth")
+		active := request.FormValue("active")
+
+		var needsAdmin bool = false
+		if auth != "" || active != "" {
+			needsAdmin = true
+		}
+
+		uid, err := strconv.Atoi(params["id"])
+		if err != nil { // none ID param
+			uid = id // update login user
+		} else {
+			if uid != id {
+				needsAdmin = true
+			}
+		}
+
+		if needsAdmin {
+			_, err := model.DetermineAdmin(db, id)
+			if err != nil {
+				render.JSON(403, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+				return
+			}
+		}
+
+		user, err := model.GetUserByID(db, uid)
+		if err != nil { // user does not exist
+			render.JSON(403, model.NewError(ERR_REQUEST_FAILED, "User does not exist!"))
+			return
+		}
+
+		pwd := request.FormValue("pwd")
+		if pwd != "" {
+			// check password
+			if err = model.VerifyPassword(pwd); err != nil {
+				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				return
+			} else {
+				user.Pwd = pwd
+			}
+		}
+
+		nickname := request.FormValue("nickname")
+		if nickname != "" {
+			if err = model.VerifyNickName(nickname); err != nil {
+				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				return
+			} else {
+				user.Nickname = nickname
+			}
+		}
+
+		email := request.FormValue("email")
+		if email != "" {
+			if err = model.VerifyEmail(email); err != nil {
+				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				return
+			} else {
+				user.Email = email
+			}
+		}
+
+		if auth != "" {
+			if i, err := strconv.ParseInt(auth, 10, 8); err == nil {
+				user.Authority = int8(i)
+			} else {
+				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				return
+			}
+		}
+
+		if active != "" {
+			if i, err := strconv.ParseInt(active, 10, 8); err == nil {
+				user.Active = int8(i)
+			} else {
+				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				return
+			}
+		}
+
+		_, err = db.Update(user)
+		if err == nil {
+			render.JSON(201, user)
+		} else {
+			render.JSON(422, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+		}
 	}
 }
 
@@ -158,35 +257,4 @@ func DeleteUser(db *gorp.DbMap, params martini.Params, render render.Render) {
 		erp := model.Error{Code: 11021, Msg: "Delete user failed!"}
 		render.JSON(404, erp)
 	}
-}
-
-/**
-* Change user password
-*
-* Code:    11041: changed password failed
- */
-func changeUserPwd(db *gorp.DbMap, render render.Render, id int, pwd string) {
-	_, err := db.Exec("UPDATE tb_users SET pwd = ? WHERE id = ?", pwd, id)
-	if err != nil {
-		log.Printf("Change password error: %s", err.Error())
-		erp := model.Error{Code: 11041, Msg: "Change user password failed!"}
-		render.JSON(404, erp)
-	} else {
-		render.JSON(201, "OK")
-	}
-}
-
-func UpdateUser(db *gorp.DbMap, params martini.Params, render render.Render, request *http.Request) {
-	id, err := strconv.Atoi(params["id"])
-	if err != nil {
-		panic(err)
-	}
-
-	pwd := request.FormValue("pwd")
-	if pwd != "" {
-		changeUserPwd(db, render, id, pwd)
-		return
-	}
-
-	render.JSON(400, "Invaild Action")
 }
