@@ -136,20 +136,21 @@ func VerifyNickName(nick string) error {
 /*
 * To determine whether the user is an administrator
  */
-func DetermineAdmin(db *gorp.DbMap, id int) (*User, error) {
-	ret, err := db.Get(User{}, id)
-	log.Println("Login: ", ret)
-	if err != nil {
-		log.Printf("Login user does not exist: %s", err.Error())
-		return nil, errors.New("Login user does not exist!")
+func DetermineAdmin(db *gorp.DbMap, id int, name string) (bool, error) {
+	if name == "admin" {
+		return true, nil
 	}
 
-	if user, ok := ret.(*User); ok && user.Authority == VALUE_ADMIN_AUTHORITY {
-		return user, nil
-	}
+	// ret, err := db.Get(User{}, id)
+	// if err != nil {
+	// 	log.Printf("Login user does not exist: %s", err.Error())
+	// 	return nil, errors.New("Login user does not exist!")
+	// }
 
-	log.Printf("Create user with non-admin: %d", id)
-	return nil, errors.New("Must login with admin!")
+	// if user, ok := ret.(*User); ok && user.Authority == VALUE_ADMIN_AUTHORITY {
+	// 	return user, nil
+	// }
+	return false, errors.New("Must login with admin!")
 }
 
 /*
@@ -166,6 +167,63 @@ func GetUserByID(db *gorp.DbMap, id int) (*User, error) {
 	}
 
 	return nil, errors.New("User does not exist!")
+}
+
+/*
+* Query multiple users info from database by ID
+ */
+func GetUsersByID(db *gorp.DbMap, ids []int) ([]*User, error) {
+	var users []*User
+	for _, id := range ids {
+		ret, err := db.Get(User{}, id)
+		if err == nil {
+			if user, ok := ret.(*User); ok {
+				users = append(users, user)
+			}
+		}
+	}
+
+	return users, nil
+}
+
+/*
+* Query user info from database by Name
+ */
+func GetUserByName(db *gorp.DbMap, name string) (*User, error) {
+	var user = User{}
+	err := db.SelectOne(&user, "SELECT * FROM "+config.TABLE_NAME_USER+" WHERE name = ?", name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+/*
+* Query users info from database by Name
+ */
+func GetUsersByName(db *gorp.DbMap, names []string) ([]*User, error) {
+	var users []*User
+	for _, name := range names {
+		if user, err := GetUserByName(db, name); err == nil {
+			users = append(users, user)
+		}
+	}
+
+	return users, nil
+}
+
+/*
+* Query all users info from database
+ */
+func GetAllUsers(db *gorp.DbMap) ([]*User, error) {
+	var users []*User
+	_, err := db.Select(&users, "SELECT * FROM "+config.TABLE_NAME_USER)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (user *User) PreInsert(s gorp.SqlExecutor) error {

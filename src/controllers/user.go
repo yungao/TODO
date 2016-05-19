@@ -1,11 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	// "regexp"
-	// "strings"
 
 	"github.com/coopernurse/gorp"
 	"github.com/go-martini/martini"
@@ -13,6 +14,7 @@ import (
 	"github.com/martini-contrib/sessions"
 	//"github.com/martini-contrib/binding"
 
+	"config"
 	model "models"
 	utils "utils"
 )
@@ -21,8 +23,9 @@ const (
 	// request failed
 	ERR_REQUEST_FAILED = 40100
 
-	ERR_INVALID_DATA = 40011
-	ERR_NAME_EXIST   = 40013
+	ERR_INVALID_DATA   = 40011
+	ERR_NAME_EXIST     = 40013
+	ERR_USET_NOT_FOUND = 40014
 )
 
 /**
@@ -30,9 +33,9 @@ const (
  */
 func CreateUser(session sessions.Session, user model.User, db *gorp.DbMap, render render.Render) {
 	log.Println("Create User: ", user.String())
-	id, err := utils.ParseSession(session, render)
+	id, name, err := utils.ParseSession(session, render)
 	if err == nil {
-		_, err := model.DetermineAdmin(db, id)
+		_, err := model.DetermineAdmin(db, id, name)
 		if err != nil {
 			render.JSON(403, model.NewError(ERR_REQUEST_FAILED, err.Error()))
 			return
@@ -74,7 +77,8 @@ func CreateUser(session sessions.Session, user model.User, db *gorp.DbMap, rende
 * Update user info
  */
 func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params, render render.Render, request *http.Request) {
-	id, err := utils.ParseSession(session, render)
+	log.Println("Requst request:", request)
+	id, name, err := utils.ParseSession(session, render)
 	if err == nil { // has login
 		auth := request.FormValue("auth")
 		active := request.FormValue("active")
@@ -94,7 +98,7 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 		}
 
 		if needsAdmin {
-			_, err := model.DetermineAdmin(db, id)
+			_, err := model.DetermineAdmin(db, id, name)
 			if err != nil {
 				render.JSON(403, model.NewError(ERR_REQUEST_FAILED, err.Error()))
 				return
@@ -103,7 +107,7 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 
 		user, err := model.GetUserByID(db, uid)
 		if err != nil { // user does not exist
-			render.JSON(403, model.NewError(ERR_REQUEST_FAILED, "User does not exist!"))
+			render.JSON(403, model.NewError(ERR_USET_NOT_FOUND, "User does not exist!"))
 			return
 		}
 
@@ -114,7 +118,7 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
 				return
 			} else {
-				user.Pwd = pwd
+				user.Pwd = utils.Base64Encode(pwd)
 			}
 		}
 
@@ -166,95 +170,163 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 }
 
 /**
-* List user information
+* User login
  */
-func ListUser(session sessions.Session, db *gorp.DbMap, params martini.Params, render render.Render, request *http.Request) {
-	query := request.URL.Query()
-	name := query.Get("name")
-
-	if !utils.IsEmpty(name) {
-		//_, err := utils.ParseSession(session, render)
-		//if err == nil {
-		var user = model.User{}
-		err := db.SelectOne(&user, "SELECT * FROM user WHERE name=?", name)
-		if err != nil {
-			render.JSON(200, "{}")
-		} else {
-			render.JSON(200, user)
-		}
-		//}
+func Login(session sessions.Session, user model.User, db *gorp.DbMap, render render.Render) {
+	var dbUser = model.User{}
+	err := db.SelectOne(&dbUser, "SELECT * FROM "+config.TABLE_NAME_USER+" WHERE name=?", user.Name)
+	if err != nil {
+		log.Printf("Login error: User[%s] does not exist", user.Name)
+		render.JSON(422, model.NewError(ERR_USET_NOT_FOUND, fmt.Sprintf("User[%s] does not exist!", user.Name)))
 	} else {
-		erp := model.Error{Code: ERR_REQUEST_FAILED, Msg: "Not Found!"}
-		render.JSON(404, erp)
+		pwd := utils.Base64Encode(user.Pwd)
+		if dbUser.Pwd != pwd {
+			log.Printf("Login error: User[%s]'s password[%s] error", user.Name, pwd)
+			erp := model.NewError(ERR_INVALID_DATA, fmt.Sprintf("User[%s]'s password[%s] error!", user.Name, user.Pwd))
+			render.JSON(422, erp)
+		} else {
+			if dbUser.Active == 0 {
+				dbUser.Active = 1
+				db.Update(&dbUser)
+			}
+
+			s := fmt.Sprintf("%d:%s", dbUser.ID, dbUser.Name)
+			session.Set("ID", s)
+			log.Println("Login Session: ", session)
+			render.JSON(201, dbUser)
+		}
 	}
 }
 
 /**
-* user login
-*
-* Code:
-*           11010: login failed
-*           11011: user does not exist
-*           11012: user password error
+* User logout
  */
-func Login(session sessions.Session, user model.User, db *gorp.DbMap, render render.Render) {
-	var dbUser = model.User{}
-	err := db.SelectOne(&dbUser, "SELECT * FROM user WHERE name=?", user.Name)
-	if err != nil {
-		log.Printf("Login error: User[%s] does not exist", user.Name)
-		erp := model.Error{Code: 11011, Msg: "User does not exist!"}
-		render.JSON(422, erp)
-	} else {
-		if dbUser.Pwd != user.Pwd {
-			log.Printf("Login error: User[%s]'s password[%s] error", user.Name, user.Pwd)
-			erp := model.Error{Code: 11012, Msg: "User password error!"}
-			render.JSON(422, erp)
-		} else {
-			session.Set("ID", dbUser.ID)
-			log.Printf("Login Session: %s]", session)
-			render.JSON(200, dbUser)
-		}
+func Logout(session sessions.Session, db *gorp.DbMap, params martini.Params, render render.Render) {
+	_, _, err := utils.ParseSession(session, render)
+	if err == nil { // has login
+		session.Delete("ID")
+		render.JSON(200, "Logout!")
 	}
 }
 
 /**
 * Get user information
-*
-* Code:    11011: user does not exist
  */
-func GetUser(db *gorp.DbMap, params martini.Params, render render.Render) {
-	id, err := strconv.Atoi(params["id"])
-	if err != nil {
-		panic(err)
-	}
+func GetUser(session sessions.Session, db *gorp.DbMap, params martini.Params, render render.Render) {
+	_, _, err := utils.ParseSession(session, render)
+	if err == nil { // has login
+		param := params["id"]
+		id, err := strconv.Atoi(param)
+		if err == nil { // get by ID
+			user, err := model.GetUserByID(db, id)
+			if err == nil {
+				render.JSON(200, user)
+				return
+			}
+		} else { // get by Name
+			user, err := model.GetUserByName(db, param)
+			if err == nil {
+				render.JSON(200, user)
+				return
+			}
+		}
 
-	user, err := db.Get(model.User{}, id)
-	if err == nil {
-		render.JSON(200, user)
-	} else {
-		log.Printf("Get user error: %s", err.Error())
-		erp := model.Error{Code: 11011, Msg: "User does not exist!"}
-		render.JSON(404, erp)
+		render.JSON(404, model.NewError(ERR_USET_NOT_FOUND, fmt.Sprintf("User[%s] does not exist!", param)))
+	}
+}
+
+/**
+* List users info
+ */
+func ListUsers(session sessions.Session, db *gorp.DbMap, params martini.Params, render render.Render, request *http.Request) {
+	_, _, err := utils.ParseSession(session, render)
+	if err == nil { // has login
+		query := request.URL.Query()
+		if len(query) == 0 { // list all users
+			var users, err = model.GetAllUsers(db)
+			if err != nil {
+				render.JSON(404, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+			} else {
+				render.JSON(200, users)
+			}
+		} else {
+			var nusers []*model.User
+
+			pname := query.Get("name")
+			if !utils.IsEmpty(pname) {
+				names := strings.Split(pname, ",")
+				nusers, _ = model.GetUsersByName(db, names)
+			}
+
+			var iusers []*model.User
+			pid := query.Get("id")
+			if !utils.IsEmpty(pid) {
+				var ids []int
+				for _, v := range strings.Split(pid, ",") {
+					if id, err := strconv.Atoi(v); err == nil {
+						var exist bool = false
+						for _, u := range nusers {
+							if u.ID == id {
+								exist = true
+								break
+							}
+						}
+
+						if !exist {
+							ids = append(ids, id)
+						}
+					}
+				}
+
+				iusers, _ = model.GetUsersByID(db, ids)
+			}
+
+			users := make([]*model.User, len(iusers)+len(nusers))
+			pos := copy(users, iusers)
+			copy(users[pos:], nusers)
+
+			render.JSON(200, users)
+		}
 	}
 }
 
 /**
 * Delete user
-*
-* Code:    11021: delete user failed
  */
-func DeleteUser(db *gorp.DbMap, params martini.Params, render render.Render) {
-	id, err := strconv.Atoi(params["id"])
-	if err != nil {
-		panic(err)
+func DeleteUser(session sessions.Session, db *gorp.DbMap, params martini.Params, render render.Render) {
+	id, name, err := utils.ParseSession(session, render)
+	if err == nil { // has login
+		_, err := model.DetermineAdmin(db, id, name)
+		if err == nil { // login user is admin
+			uid, err := strconv.Atoi(params["id"])
+			if err == nil {
+				if id == uid {
+					render.JSON(403, model.NewError(ERR_REQUEST_FAILED, "Can not delete admin!"))
+				} else {
+					_, err = db.Delete(&model.User{ID: uid})
+					if err == nil {
+						render.JSON(204, "Delete success!")
+					} else {
+						log.Printf("Delete tb_users error: %s", err.Error())
+						render.JSON(404, model.NewError(ERR_USET_NOT_FOUND, fmt.Sprintf("User[%d] does not exist!", uid)))
+					}
+				}
+			} else {
+				render.JSON(404, model.NewError(ERR_INVALID_DATA, "Invalid Data!"))
+			}
+		} else {
+			render.JSON(403, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+		}
 	}
+}
 
-	_, err = db.Delete(&model.User{ID: id})
-	if err == nil {
-		render.JSON(204, "No Content")
-	} else {
-		log.Printf("Delete tb_users error: %s", err.Error())
-		erp := model.Error{Code: 11021, Msg: "Delete user failed!"}
-		render.JSON(404, erp)
+func IsLogin(session sessions.Session, db *gorp.DbMap, params martini.Params, render render.Render) {
+	id, _, err := utils.ParseSession(session, render)
+	if err == nil { // has login
+		user, err := model.GetUserByID(db, id)
+		if err == nil {
+			render.JSON(200, user)
+			return
+		}
 	}
 }

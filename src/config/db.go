@@ -16,7 +16,7 @@ const (
 	TABLE_NAME_TODO_PARTNER = "tb_todo_partners"
 	TABLE_NAME_TODO_PROCESS = "tb_todo_process"
 	TABLE_NAME_TODO_TAGS    = "tb_todo_tags"
-    TABLE_NAME_TODO_ATTACHS = "tb_todo_attachs"
+	TABLE_NAME_TODO_ATTACHS = "tb_todo_attachs"
 )
 
 func EnableDBLogger(db *gorp.DbMap) {

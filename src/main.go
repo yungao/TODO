@@ -40,7 +40,7 @@ func main() {
 	// set asset directory
 	app.Use(martini.Static("assets"))
 	// use martini logger
-	app.Use(martini.Logger())
+	// app.Use(martini.Logger())
 	// use martini-contrib/render
 	app.Use(render.Renderer())
 	// use martini-contrib/sessions
@@ -59,36 +59,25 @@ func main() {
 	})
 
 	app.Group("/api/v1", func(router martini.Router) {
-		// Http request unauthorized
-		// app.Get("/unauth", func(render render.Render) {
-		//    // render.HTML(200, "login", nil)
-		//    render.JSON(401, "Please Login TODO first!")
-		// })
-
 		app.Group("/user", func(router martini.Router) {
 			// registered user
 			router.Post("", binding.Bind(model.User{}), control.CreateUser)
 			// update user info
+			router.Patch("/:id", control.UpdateUser)
 			router.Patch("", control.UpdateUser)
-			router.Patch("/:id([(0-9)+])", control.UpdateUser)
-
-			// List user informations
-			router.Get("", control.ListUser)
-
-			// User login
+			// user login
 			router.Post("/login", binding.Bind(model.User{}), control.Login)
-			router.Get("/login", binding.Bind(model.User{}), control.Login)
-			// Get user information
-			router.Get("/:id([(0-9)+])", control.GetUser)
-			// Delete user
+			// router.Get("/login", binding.Bind(model.User{}), control.Login)
+			// check login state
+			router.Get("/login", control.IsLogin)
+			// user logout
+			router.Get("/logout", control.Logout)
+			// get user info
+			router.Get("/:id", control.GetUser)
+			// list users info, can filter
+			router.Get("", control.ListUsers)
+			// delete user
 			router.Delete("/:id", control.DeleteUser)
-			// Update user
-			router.Patch("/pwd/:id", control.UpdateUser)
-			// Check login state
-			router.Get("/isLogin", func(session sessions.Session, render render.Render) {
-				v := session.Get("ID")
-				render.JSON(200, v)
-			})
 		})
 	})
 	app.NotFound(func(render render.Render) {

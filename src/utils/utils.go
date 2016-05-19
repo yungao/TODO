@@ -11,30 +11,29 @@ import (
 	"github.com/martini-contrib/sessions"
 )
 
-func ParseSession(session sessions.Session, render render.Render) (int, error) {
+func ParseSession(session sessions.Session, render render.Render) (int, string, error) {
 	if session != nil {
-		sid := session.Get("ID")
-		log.Printf("Session, ID: %s", sid)
+		value := session.Get("ID")
+		if v, ok := value.(string); ok {
+			s := strings.Split(v, ":")
+			if len(s) == 2 {
+				sid := s[0]
+				name := s[1]
+				log.Printf("Session, Name: %s[%s]", name, sid)
 
-		if id, ok := sid.(int); ok {
-			log.Printf("Parse session, ID: %d", id)
-			return id, nil
-		}
-
-		if id, ok := sid.(string); ok {
-			id, err := strconv.Atoi(id)
-			if err == nil {
-				log.Printf(">Parse session, ID: %d", id)
-				return id, nil
+				id, err := strconv.Atoi(sid)
+				if err == nil {
+					log.Println("Parse session, ID: ", id)
+					return id, name, nil
+				}
 			}
 		}
-
 	}
 
 	log.Println("Parse session error, unthenticated!")
 	render.JSON(401, "Unauthorized")
 
-	return -1, errors.New("Unauthorized")
+	return -1, "", errors.New("Unauthorized")
 }
 
 func IsEmpty(s string) bool {
