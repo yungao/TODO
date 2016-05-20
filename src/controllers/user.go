@@ -184,7 +184,7 @@ func Login(session sessions.Session, user model.User, db *gorp.DbMap, render ren
 		} else {
 			pwd := utils.Base64Encode(user.Pwd)
 			if dbUser.Pwd != pwd {
-				log.Printf("Login error: User[%s]'s password[%s] error", user.Name, pwd)
+				log.Printf("Login error: User[%s]'s password[%s] error", user.Name, user.Pwd)
 				erp := model.NewError(ERR_INVALID_DATA, fmt.Sprintf("User[%s]'s password[%s] error!", user.Name, user.Pwd))
 				render.JSON(422, erp)
 			} else {
