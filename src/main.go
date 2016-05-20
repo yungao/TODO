@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	// "os"
+	"os"
 	// "net/http"
 
 	"github.com/coopernurse/gorp"
@@ -27,9 +27,21 @@ func initDBTables(db *gorp.DbMap) {
 	model.CreateAttachTable(db)
 }
 
+func genHttpPort() string {
+	switch os.Getenv("HOME") {
+	case "/home/gaoyun":
+		return ":3000"
+	case "/home/lquan":
+		return ":3001"
+	case "/home/yxd":
+		return ":3002"
+	default:
+		return ":3010"
+	}
+}
+
 func main() {
 	//envy.Bootstrap()
-
 	app := martini.Classic()
 	// initialization database
 	db := config.DB()
@@ -84,6 +96,7 @@ func main() {
 	//======================================================
 
 	log.Print("Go web server running...\n")
-	app.Run()
+	// app.Run()
+	app.RunOnAddr(genHttpPort())
 	log.Print("Go web server stopped !\n")
 }
