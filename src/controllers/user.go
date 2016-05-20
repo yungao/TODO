@@ -179,21 +179,25 @@ func Login(session sessions.Session, user model.User, db *gorp.DbMap, render ren
 		log.Printf("Login error: User[%s] does not exist", user.Name)
 		render.JSON(422, model.NewError(ERR_USET_NOT_FOUND, fmt.Sprintf("User[%s] does not exist!", user.Name)))
 	} else {
-		pwd := utils.Base64Encode(user.Pwd)
-		if dbUser.Pwd != pwd {
-			log.Printf("Login error: User[%s]'s password[%s] error", user.Name, pwd)
-			erp := model.NewError(ERR_INVALID_DATA, fmt.Sprintf("User[%s]'s password[%s] error!", user.Name, user.Pwd))
-			render.JSON(422, erp)
+		if dbUser.Active == -1 {
+			render.JSON(403, model.NewError(ERR_REQUEST_FAILED, "The user is disabled!"))
 		} else {
-			if dbUser.Active == 0 {
-				dbUser.Active = 1
-				db.Update(&dbUser)
-			}
+			pwd := utils.Base64Encode(user.Pwd)
+			if dbUser.Pwd != pwd {
+				log.Printf("Login error: User[%s]'s password[%s] error", user.Name, pwd)
+				erp := model.NewError(ERR_INVALID_DATA, fmt.Sprintf("User[%s]'s password[%s] error!", user.Name, user.Pwd))
+				render.JSON(422, erp)
+			} else {
+				if dbUser.Active == 0 {
+					dbUser.Active = 1
+					db.Update(&dbUser)
+				}
 
-			s := fmt.Sprintf("%d:%s", dbUser.ID, dbUser.Name)
-			session.Set("ID", s)
-			log.Println("Login Session: ", session)
-			render.JSON(201, dbUser)
+				s := fmt.Sprintf("%d:%s", dbUser.ID, dbUser.Name)
+				session.Set("ID", s)
+				log.Println("Login Session: ", session)
+				render.JSON(201, dbUser)
+			}
 		}
 	}
 }

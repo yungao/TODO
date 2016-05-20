@@ -45,8 +45,6 @@ func main() {
 	app.Use(render.Renderer())
 	// use martini-contrib/sessions
 	store := sessions.NewCookieStore([]byte("todo2016@etech"))
-	// Default our store to use Session cookies, so we don't leave logged in
-	// users roaming around
 	store.Options(sessions.Options{
 		MaxAge: 0,
 	})
