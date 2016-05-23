@@ -14,19 +14,22 @@ var user = {
         });
     },
 
-    checklogin:function(url){
+    checklogin:function(url,successFuc){
         utils.doGet("/api/v1/user/login",function(data){
+            if(typeof(successFuc) != "undefined") successFuc(data);
             console.log(data);
         },function(code,errmsg){
+            console.log("HTTP " + code + ": " + errmsg);
             window.location.href = url;
         });
     },
 
     logout: function() {
         utils.doGet("/api/v1/user/logout",function(data){
+            console.log(data);
             window.location.href = "login.html";
         },function(code,errmsg){
-            console.log(errmsg);
+            console.log("HTTP " + code + ": " + errmsg);
         });
     },
 
@@ -34,21 +37,37 @@ var user = {
         utils.doPost("/api/v1/user",{name:"lq123",pwd:"123456",email:"lq@todo.com"},function(data){
             console.log(data);
         },function(code,ermsg){
-            console.log(ermsg);
+            console.log("HTTP " + code + ": " + errmsg);
         });
     },
 
     deleteuser: function() {
-        utils.doDelete("/api/v1/user/24",function(data){
+        utils.doDelete("/api/v1/user/34",function(data){
             console.log(data);
         },function(code,ermsg){
-            console.log(ermsg);
+            console.log("HTTP " + code + ": " + errmsg);
         });
     },
 
+    getuser: function(id){
+        if (typeof(id) == "undefined") id="";
+        else id = "/" + id;
+        utils.doGet("/api/v1/user"+id,function(data){
+            console.log(data);
+        },function(code,ermsg){
+            console.log("HTTP " + code + ": " + errmsg);
+        });
+    },
 
-
-
+    updateuser: function(id){
+        if (typeof(id) == "undefined") id="";
+        else id = "/" + id;
+        utils.doPatch("/api/v1/user"+id,function(data){
+            console.log(data);
+        },function(code,ermsg){
+            console.log("HTTP " + code + ": " + errmsg);
+        });
+    },
 
 
 
