@@ -21,11 +21,20 @@
     <script src="/jslib/respond.js"></script>
     <![endif]-->
 
+    <script type="text/javascript" src="utils.js"></script>
+    <script type="text/javascript" src="user.js"></script>
+
+    <script>
+        user.checklogin("login.html?index.html");
+    </script>
+
+
 </head>
 <body> 
     </br>
     <div align="center">
         <h3>Go, TODO !</h3>
+        <button onclick="user.logout()">logout</button>
     </div>
 </body>
 </html>
