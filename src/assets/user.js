@@ -2,13 +2,56 @@ var user = {
     session: null,
 
     login: function() {
+        var furl = $.url('?furl');
+        if (furl == null) furl = "index.html";
         var name = $('#id-input-name').val();
         var pwd = $('#id-input-pwd').val();
         utils.doPost("/api/v1/user/login", {name:name, pwd:pwd}, function(data) {
-            console.log(data)
-            $('#id-errmsg').html("Hi " + data.nickname + ", welcome TODO!");
+            window.location.href = furl;
+//            $('#id-errmsg').html("Hi " + data.nickname + ", welcome TODO!");
         }, function(code, errmsg) {
             $('#id-errmsg').html("HTTP " + code + ": " + errmsg);
         });
     },
+
+    checklogin:function(url){
+        utils.doGet("/api/v1/user/login",function(data){
+            console.log(data);
+        },function(code,errmsg){
+            window.location.href = url;
+        });
+    },
+
+    logout: function() {
+        utils.doGet("/api/v1/user/logout",function(data){
+            window.location.href = "login.html";
+        },function(code,errmsg){
+            console.log(errmsg);
+        });
+    },
+
+    createuser: function() {
+        utils.doPost("/api/v1/user",{name:"lq123",pwd:"123456",email:"lq@todo.com"},function(data){
+            console.log(data);
+        },function(code,ermsg){
+            console.log(ermsg);
+        });
+    },
+
+    deleteuser: function() {
+        utils.doDelete("/api/v1/user/24",function(data){
+            console.log(data);
+        },function(code,ermsg){
+            console.log(ermsg);
+        });
+    },
+
+
+
+
+
+
+
+
+
 }

@@ -7,5 +7,33 @@ var utils = {
                 errorFunc(err.status, err.responseText);
             });
     },
+    
+    doGet: function(url,successFunc,errorFunc) {
+        $.ajax({
+            url:url,
+            type:"get",
+            success:function(data){
+                successFunc(data);
+            },
+            error:function(data){
+                errorFunc(data);
+            },
+        });
+    },
+
+    doDelete: function(url,successFunc,errorFunc) {
+         $.ajax({
+            url:url,
+            type:"delete",
+            success:function(data){
+                successFunc(data);
+            },
+            error:function(data){
+                errorFunc(data);
+            },
+        });
+    },
+
+
 
 }
