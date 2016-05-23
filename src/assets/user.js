@@ -30,5 +30,28 @@ var user = {
         });
     },
 
+    createuser: function() {
+        utils.doPost("/api/v1/user",{name:"lq123",pwd:"123456",email:"lq@todo.com"},function(data){
+            console.log(data);
+        },function(code,ermsg){
+            console.log(ermsg);
+        });
+    },
+
+    deleteuser: function() {
+        utils.doDelete("/api/v1/user/24",function(data){
+            console.log(data);
+        },function(code,ermsg){
+            console.log(ermsg);
+        });
+    },
+
+
+
+
+
+
+
+
 
 }
