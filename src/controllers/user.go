@@ -209,6 +209,7 @@ func Logout(session sessions.Session, db *gorp.DbMap, params martini.Params, ren
 	_, _, err := utils.ParseSession(session, render)
 	if err == nil { // has login
 		session.Delete("ID")
+		session.Clear()
 		render.JSON(200, "Logout!")
 	}
 }
@@ -307,12 +308,17 @@ func DeleteUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 				if id == uid {
 					render.JSON(403, model.NewError(ERR_REQUEST_FAILED, "Can not delete admin!"))
 				} else {
-					_, err = db.Delete(&model.User{ID: uid})
+					count, err := db.Delete(&model.User{ID: uid})
 					if err == nil {
-						render.JSON(204, "Delete success!")
+						if count == 1 {
+							render.JSON(204, "Delete success!")
+						} else {
+							log.Printf("Delete user[%d] does not exist: %s", uid)
+							render.JSON(404, model.NewError(ERR_USET_NOT_FOUND, fmt.Sprintf("User[%d] does not exist!", uid)))
+						}
 					} else {
 						log.Printf("Delete tb_users error: %s", err.Error())
-						render.JSON(404, model.NewError(ERR_USET_NOT_FOUND, fmt.Sprintf("User[%d] does not exist!", uid)))
+						render.JSON(404, model.NewError(ERR_REQUEST_FAILED, err.Error()))
 					}
 				}
 			} else {

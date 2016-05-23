@@ -19,7 +19,7 @@ func ParseSession(session sessions.Session, render render.Render) (int, string, 
 			if len(s) == 2 {
 				sid := s[0]
 				name := s[1]
-				log.Printf("Session, Name: %s[%s]", name, sid)
+				log.Printf("Session -> Name: %s[%s]", name, sid)
 
 				id, err := strconv.Atoi(sid)
 				if err == nil {
