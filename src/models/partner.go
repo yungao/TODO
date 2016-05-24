@@ -7,9 +7,11 @@ import (
 )
 
 type Partner struct {
-	ID     int `db:"id"        json:"id"`
-	TodoID int `db:"todoid"    json:"todoid"   form:"todoid"   binding:"required"`
-	UserID int `db:"uid"       json:"uid"      form:"name"     binding:"required"`
+	ID        int  `db:"id"        json:"id"`
+	TodoID    int  `db:"todoid"    json:"todoid"   form:"todoid"   binding:"required"`
+	PartnerID int  `db:"pid"       json:"pid"      form:"pid"      binding:"required"`
+	UserID    int  `db:"uid"       json:"uid"`
+	Duty      int8 `db:"duty"      json:"duty"     form:"duty"     binding:"required"`
 	/* Active:
 	 *       -1: deleted
 	 *       1:  normal
@@ -26,8 +28,10 @@ func CreatePartnerTable(db *gorp.DbMap) {
 	tb := db.AddTableWithName(Partner{}, config.TABLE_NAME_TODO_PARTNER)
 	tb.SetKeys(true, "id")
 	tb.ColMap("todoid").SetNotNull(true)
+	tb.ColMap("pid").SetNotNull(true)
+	tb.SetUniqueTogether("todoid", "pid")
 	tb.ColMap("uid").SetNotNull(true)
-	tb.SetUniqueTogether("todoid", "uid")
+	tb.ColMap("duty").SetNotNull(true)
 	tb.ColMap("active").SetNotNull(true)
 
 	err := db.CreateTablesIfNotExists()

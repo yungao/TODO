@@ -8,11 +8,11 @@ import (
 )
 
 type Process struct {
-	ID         int `db:"id"        json:"id"`
-	TodoID     int `db:"todoid"    json:"todoid"    form:"todoid"      binding:"required"`
-	CreatorID  int `db:"uid"       json:"uid"`
-	AssignedID int `db:"asgid"     json:"asgid"     form:"asgid"`
-	TagID      int `db:"tagid"     json:"tagid"     form:"tagid"`
+	ID        int    `db:"id"        json:"id"`
+	TodoID    int    `db:"todoid"    json:"todoid"    form:"todoid"      binding:"required"`
+	CreatorID int    `db:"uid"       json:"uid"`
+	Partners  string `db:"partners"  json:"partners"  form:"partners"`
+	Tags      string `db:"tags"      json:"tags"      form:"tags"`
 	/** Action:
 	 *       0:  Complete Todo
 	 *       1:  Create Todo
