@@ -27,27 +27,28 @@
 
 
         $(document).ready(function(){
-
+            //update_size:function(){
+                var h=$(window).height();
+                $("#login").css("margin-top",(h-350)/2);
+           // },
         });
     </script>
 </head>
 <body>
     <div id="wrapper">
-        <div style="width:320px; margin:100px auto 0 auto;">
+        <div id="login" style="width:320px; margin:0 auto 0 auto;padding:30px;background-color:#F5EFEF">
+            <span style="font-size:20px;">TODO登录</span>
+            <p style="margin:30px 0 0 0; font-size:16px;">用户名</p>
             <div>
-                <span style="font-size:20px;">TODO登录</span>
-                <p style="margin:30px 0 0 0; font-size:16px;">用户名</p>
-                <div>
-                    <input type="text" class="form-control" id="id-input-name">
-                </div>
-                <p style="margin:20px 0 0 0; font-size:16px;">密码</p>
-                <div style="margin:0 0 20px 0;">
-                    <input type="password" class="form-control" id="id-input-pwd">
-                </div>
-                <div id="id-errmsg" style="color:#F00;"></div>
-                <button type="button" class="btn btn-success" style="width:100%; margin-top:50px;" onclick="user.login()">登 录</button>
+                <input type="text" class="form-control" id="id-input-name">
             </div>
-        </div>
+            <p style="margin:20px 0 0 0; font-size:16px;">密码</p>
+            <div style="margin:0 0 20px 0;">
+                <input type="password" class="form-control" id="id-input-pwd">
+            </div>
+            <div id="id-errmsg" style="color:#F00;"></div>
+            <button type="button" class="btn btn-success" style="width:100%; margin-top:50px;" onclick="user.login()">登 录</button>
+    </div>
     </div>
 </body>
 </html>

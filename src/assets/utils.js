@@ -36,9 +36,10 @@ var utils = {
         });
     },
 
-    doPatch: function(url,successFunc,errorFunc) {
+    doPatch: function(url,data,successFunc,errorFunc) {
          $.ajax({
             url:url,
+            data:data,
             type:"patch",
             dataType:"json",
             success:function(data){

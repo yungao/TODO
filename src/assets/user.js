@@ -59,10 +59,8 @@ var user = {
         });
     },
 
-    updateuser: function(id){
-        if (typeof(id) == "undefined") id="";
-        else id = "/" + id;
-        utils.doPatch("/api/v1/user"+id,function(data){
+    updateuser: function(options){
+        utils.doPatch("/api/v1/user",options,function(data){
             console.log(data);
         },function(code,ermsg){
             console.log("HTTP " + code + ": " + errmsg);

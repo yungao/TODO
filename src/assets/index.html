@@ -9,6 +9,7 @@
     <script type="text/javascript" src="/jslib/jquery-1.9.1.js"></script>
     <script type="text/javascript" src="/jslib/jquery.cookie.js"></script>
 	<script type="text/javascript" src="/jslib/url.js"></script>
+    <script src="jslib/mustache.js"></script>
 	
     <link rel="stylesheet" href="/artdialog-6.0.4/css/ui-dialog.css">
     <script src="/artdialog-6.0.4/dist/dialog-min.js"></script>
@@ -27,23 +28,51 @@
     <link rel="stylesheet" href="main.css">
 
     <script>
-        todo.init();
+        $(document).ready(function(){
+            todo.init();
+            user.checklogin("login.html?index.html",function(data){
+                if(data.auth == 1 ||data.auth == -1)    $("#header #user-control").show();
+                var sss = "<span class='glyphicon glyphicon-user'></span>"+data.name;
+                $("#usericon").html(sss);
+            });
+
+        })
     </script>
 
 
 </head>
 <body>
-    <div style="padding:30px 80px;">
-        <div id="usericon" class="pull-right" onclick="user.logout()">
+    <div id="header" style="padding:30px 80px;min-width:760px;background-color:#fff;">
+        <div id="my-todo"></div>
+        <div id="public-todo"></div>
+        <div class="pull-right dropdown" style="cursor:pointer;">
+            <span class="dropdown-toggle" id="usericon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+            </span>
+            <ul class="dropdown-menu" aria-labelledby="dropdownUserMenu">
+                <li><a href="#user-modal" data-toggle="modal" id="navmpass"><span class="language_modifypass">我的资料</span></a></li>
+                <li><a href="#" onclick="user.logout();"><span class="language_logout">退出登陆</span></a></li>
+            </ul>
         </div>
+        <div id="user-control" class="pull-right" style="display:none;margin-right:50px;">管理</div>
         <div class="clearfix"></div>
     </div>
 
     <div id="bodybox">
     </div>
 
+    <div id="user-modal"class="modal">
+        <div id="user-info">
+        </div>
 
+        <div class="btn pull-right" id="cancel-btn" data-dismiss="modal">
+            <span>取消</span>
+        </div>
 
+        <div class="btn pull-right" id="save-btn">
+            <span>保存修改</span>
+        </div>
+
+    </div>
 
 
     <!--/br>
@@ -51,5 +80,54 @@
         <h3>Go, TODO !</h3>
         <button onclick="user.getuser()">logout</button>
     </div-->
+ 
+
+    <script id="user-info-tpl" type="text/mustache-template">
+
+        <div id="user-group">
+            <div id="name">
+                <span>账号:</span>
+            </div>
+            <input name="name" value="{{name}}" readonly="true" style="background-color:#C3BEBE">
+        </div>
+
+        <div id="user-group">
+            <div id="name">
+                <span>昵称:</span>
+            </div>
+            <input name="nickname" value="{{nickname}}">
+        </div>
+
+        <div id="user-group">
+            <div id="name">
+                <span>邮箱:</span>
+            </div>
+            <input name="email" value="{{email}}">
+        </div>
+
+        <div id="user-group">
+            <div id="name">
+                <span>创建时间:</span>
+            </div>
+            <input name="create" value="{{create}}" readonly="true" style="background-color:#C3BEBE">
+        </div>
+
+        <div id="user-group">
+            <div id="name">
+                <span>更新时间:</span>
+            </div>
+            <input name="update" value="{{update}}" readonly="true" style="background-color:#C3BEBE">
+        </div>
+
+        <div id="user-group">
+            <div id="name">
+                <span>修改密码:</span>
+            </div>
+            <input name="pwd" value="">
+        </div>
+
+    </script>
+
+
 </body>
 </html>
