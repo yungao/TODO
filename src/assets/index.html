@@ -23,18 +23,33 @@
 
     <script type="text/javascript" src="utils.js"></script>
     <script type="text/javascript" src="user.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <link rel="stylesheet" href="main.css">
 
     <script>
-        user.checklogin("login.html?index.html");
+        todo.init();
     </script>
 
 
 </head>
-<body> 
-    </br>
+<body>
+    <div style="padding:30px 80px;">
+        <div id="usericon" class="pull-right" onclick="user.logout()">
+        </div>
+        <div class="clearfix"></div>
+    </div>
+
+    <div id="bodybox">
+    </div>
+
+
+
+
+
+    <!--/br>
     <div align="center">
         <h3>Go, TODO !</h3>
-        <button onclick="user.deleteuser()">logout</button>
-    </div>
+        <button onclick="user.getuser()">logout</button>
+    </div-->
 </body>
 </html>
