@@ -209,7 +209,6 @@ func Logout(session sessions.Session, db *gorp.DbMap, params martini.Params, ren
 	_, _, err := utils.ParseSession(session, render)
 	if err == nil { // has login
 		session.Delete("ID")
-		session.Clear()
 		render.JSON(200, "Logout!")
 	}
 }

@@ -58,7 +58,7 @@ func main() {
 	// use martini-contrib/sessions
 	store := sessions.NewCookieStore([]byte("todo2016@etech"))
 	store.Options(sessions.Options{
-		MaxAge: 0,
+		MaxAge: 2 * 60 * 60, // 2*60*60s
 	})
 	app.Use(sessions.Sessions("session", store))
 
