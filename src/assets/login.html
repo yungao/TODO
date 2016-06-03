@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- OneOS source code by kexue@eli-tech.com 2015 -->
+<!-- TODO source code by gaoyun@eli-tech.com 2016 -->
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -10,45 +10,66 @@
     
     <script type="text/javascript" src="/jslib/jquery-1.9.1.js"></script>
     <script type="text/javascript" src="/jslib/jquery.cookie.js"></script>
+    <script type="text/javascript" src="/jslib/angular.min.js"></script>
     
     <link href="/bootstrap-3.3/css/bootstrap.min.css" rel="stylesheet" type="text/css" media="screen" />
+    <link href="main.css" rel="stylesheet" type="text/css" media="screen" />
     <script type="text/javascript" src="/bootstrap-3.3/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="jslib/url.js"></script>
+    <script type="text/javascript" src="utils.js"></script>
 
     <!--[if lt IE 9]>
         <script src="/jslib/html5shiv.js"></script>
         <script src="/jslib/respond.js"></script>
-        <![endif]-->
-    
-    <script type="text/javascript" src="utils.js"></script>
-    <script type="text/javascript" src="user.js"></script>
+    <![endif]-->
     
     <script>
+        function login(user, pwd) {
+            var furl = $.url('?furl');
+            if (furl == null) {
+                furl = "index.html";
+            }
+            utils.doPost("/api/v1/user/login", {name:user, pwd:pwd}, function(data) {
+                    console.log(data);
+                $.cookie('username', data.name, {path:'/', expires:1});
+                $.cookie('userid', data.id, {path:'/', expires:1});
+                window.location.href = furl;
+            }, function(code, errmsg) {
+                if (code == 40001) {
+                    $('#errorLogin').html("密码错误！").show();
+                } else {
+                    $('#errorLogin').html("用户不存在！").show();
+                }
+            });
+        }
 
+        var app = angular.module('todo', []).controller('loginCtrl', function($scope) {
+            $scope.login = function() {
+                login($scope.user, $scope.pwd);
+            };
+        });
 
         $(document).ready(function(){
-            //update_size:function(){
-                var h=$(window).height();
-                $("#login").css("margin-top",(h-350)/2);
-           // },
         });
     </script>
 </head>
-<body>
-    <div id="wrapper">
-        <div id="login" style="width:320px; margin:0 auto 0 auto;padding:30px;background-color:#F5EFEF">
-            <span style="font-size:20px;">TODO登录</span>
-            <p style="margin:30px 0 0 0; font-size:16px;">用户名</p>
-            <div>
-                <input type="text" class="form-control" id="id-input-name">
+
+<body class="gradientBg">
+    <div class="wrapper">
+        <form ng-app="todo" name="loginForm" ng-controller="loginCtrl" novalidate>
+            <div class="roundBox loginBox">
+                <span style="font-size:22px;">TODO登录</span>
+
+                <input type="text" class="form-control" style="margin-top:30px;" placeholder="用户名" name="user" ng-model="user" required>
+                <span class="errMsg" ng-show="loginForm.user.$dirty && loginForm.user.$error.required">用户名不能为空！</span>
+
+                <input type="password" class="form-control" style="margin-top:30px;" placeholder="密码" name="pwd" ng-model="pwd" required>
+                <span class="errMsg" ng-show="loginForm.pwd.$dirty && loginForm.pwd.$error.required">密码不能为空！</span>
+
+                <button class="btn btn-primary" style="width:100%; margin-top:60px;" ng-click="login()" ng-disabled="loginForm.user.$error.required || loginForm.pwd.$error.required">登录</button>
+                <span class="pull-right errMsg" id="errorLogin" style="margin-top:5px; display:none;"></span>
             </div>
-            <p style="margin:20px 0 0 0; font-size:16px;">密码</p>
-            <div style="margin:0 0 20px 0;">
-                <input type="password" class="form-control" id="id-input-pwd">
-            </div>
-            <div id="id-errmsg" style="color:#F00;"></div>
-            <button type="button" class="btn btn-success" style="width:100%; margin-top:50px;" onclick="user.login()">登 录</button>
-    </div>
+        </form>
     </div>
 </body>
 </html>

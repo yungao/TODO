@@ -23,7 +23,6 @@ func ParseSession(session sessions.Session, render render.Render) (int, string, 
 
 				id, err := strconv.Atoi(sid)
 				if err == nil {
-					log.Println("Parse session, ID: ", id)
 					return id, name, nil
 				}
 			}

@@ -89,6 +89,16 @@ func main() {
 			// delete user
 			router.Delete("/:id", control.DeleteUser)
 		})
+
+		app.Group("/todo", func(router martini.Router) {
+			// create todo
+			router.Post("", binding.Bind(model.Todo{}), control.CreateTodo)
+			// get todo info
+			router.Get("/:id", control.GetTodo)
+			// list todo, can filter
+			router.Get("", control.ListTodos)
+		})
+
 	})
 	app.NotFound(func(render render.Render) {
 		render.JSON(404, "Not Found!")

@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	TABLE_NAME_USER         = "tb_users"
+	TABLE_NAME_USERS         = "tb_users"
 	TABLE_NAME_TAGS         = "tb_tags"
 	TABLE_NAME_TODOS        = "tb_todos"
 	TABLE_NAME_TODO_PARTNER = "tb_todo_partners"

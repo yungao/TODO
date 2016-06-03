@@ -19,15 +19,6 @@ import (
 	utils "utils"
 )
 
-const (
-	// request failed
-	ERR_REQUEST_FAILED = 40100
-
-	ERR_INVALID_DATA   = 40011
-	ERR_NAME_EXIST     = 40013
-	ERR_USET_NOT_FOUND = 40014
-)
-
 /**
 * Create a new user, to user register
  */
@@ -37,26 +28,26 @@ func CreateUser(session sessions.Session, user model.User, db *gorp.DbMap, rende
 	if err == nil {
 		_, err := model.DetermineAdmin(db, id, name)
 		if err != nil {
-			render.JSON(403, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+			render.JSON(403, model.NewError(model.ERR_REQUEST_FAILED, err.Error()))
 			return
 		}
 
 		// check name
 		if err = model.VerifyName(user.Name); err != nil {
-			render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+			render.JSON(422, model.NewError(model.ERR_INVALID_DATA, err.Error()))
 			return
 		}
 
 		// check password
 		if err = model.VerifyPassword(user.Pwd); err != nil {
-			render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+			render.JSON(422, model.NewError(model.ERR_INVALID_DATA, err.Error()))
 			return
 		}
 
 		// check email
 		if user.Email != "" {
 			if err = model.VerifyEmail(user.Email); err != nil {
-				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				render.JSON(422, model.NewError(model.ERR_INVALID_DATA, err.Error()))
 				return
 			}
 		}
@@ -67,7 +58,7 @@ func CreateUser(session sessions.Session, user model.User, db *gorp.DbMap, rende
 			render.JSON(201, &user)
 		} else {
 			log.Printf("Create user error: %s", err.Error())
-			erp := model.Error{Code: ERR_NAME_EXIST, Msg: "Name already exists!"}
+			erp := model.Error{Code: model.ERR_NAME_EXIST, Msg: "Name already exists!"}
 			render.JSON(422, erp)
 		}
 	}
@@ -100,14 +91,14 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 		if needsAdmin {
 			_, err := model.DetermineAdmin(db, id, name)
 			if err != nil {
-				render.JSON(403, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+				render.JSON(403, model.NewError(model.ERR_REQUEST_FAILED, err.Error()))
 				return
 			}
 		}
 
 		user, err := model.GetUserByID(db, uid)
 		if err != nil { // user does not exist
-			render.JSON(403, model.NewError(ERR_USET_NOT_FOUND, "User does not exist!"))
+			render.JSON(403, model.NewError(model.ERR_USER_NOT_FOUND, "User does not exist!"))
 			return
 		}
 
@@ -115,7 +106,7 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 		if pwd != "" {
 			// check password
 			if err = model.VerifyPassword(pwd); err != nil {
-				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				render.JSON(422, model.NewError(model.ERR_INVALID_DATA, err.Error()))
 				return
 			} else {
 				user.Pwd = utils.Base64Encode(pwd)
@@ -125,7 +116,7 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 		nickname := request.FormValue("nickname")
 		if nickname != "" {
 			if err = model.VerifyNickName(nickname); err != nil {
-				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				render.JSON(422, model.NewError(model.ERR_INVALID_DATA, err.Error()))
 				return
 			} else {
 				user.Nickname = nickname
@@ -135,7 +126,7 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 		email := request.FormValue("email")
 		if email != "" {
 			if err = model.VerifyEmail(email); err != nil {
-				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				render.JSON(422, model.NewError(model.ERR_INVALID_DATA, err.Error()))
 				return
 			} else {
 				user.Email = email
@@ -146,7 +137,7 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 			if i, err := strconv.ParseInt(auth, 10, 8); err == nil {
 				user.Authority = int8(i)
 			} else {
-				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				render.JSON(422, model.NewError(model.ERR_INVALID_DATA, err.Error()))
 				return
 			}
 		}
@@ -155,7 +146,7 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 			if i, err := strconv.ParseInt(active, 10, 8); err == nil {
 				user.Active = int8(i)
 			} else {
-				render.JSON(422, model.NewError(ERR_INVALID_DATA, err.Error()))
+				render.JSON(422, model.NewError(model.ERR_INVALID_DATA, err.Error()))
 				return
 			}
 		}
@@ -164,7 +155,7 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 		if err == nil {
 			render.JSON(201, user)
 		} else {
-			render.JSON(422, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+			render.JSON(422, model.NewError(model.ERR_REQUEST_FAILED, err.Error()))
 		}
 	}
 }
@@ -174,18 +165,18 @@ func UpdateUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
  */
 func Login(session sessions.Session, user model.User, db *gorp.DbMap, render render.Render) {
 	var dbUser = model.User{}
-	err := db.SelectOne(&dbUser, "SELECT * FROM "+config.TABLE_NAME_USER+" WHERE name=?", user.Name)
+	err := db.SelectOne(&dbUser, "SELECT * FROM "+config.TABLE_NAME_USERS+" WHERE name=?", user.Name)
 	if err != nil {
 		log.Printf("Login error: User[%s] does not exist", user.Name)
-		render.JSON(422, model.NewError(ERR_USET_NOT_FOUND, fmt.Sprintf("User[%s] does not exist!", user.Name)))
+		render.JSON(422, model.NewError(model.ERR_USER_NOT_FOUND, fmt.Sprintf("User[%s] does not exist!", user.Name)))
 	} else {
-		if dbUser.Active == -1 {
-			render.JSON(403, model.NewError(ERR_REQUEST_FAILED, "The user is disabled!"))
+		if !dbUser.IsEnable() {
+			render.JSON(403, model.NewError(model.ERR_USER_DISABLED, "The user is disabled!"))
 		} else {
 			pwd := utils.Base64Encode(user.Pwd)
 			if dbUser.Pwd != pwd {
 				log.Printf("Login error: User[%s]'s password[%s] error", user.Name, user.Pwd)
-				erp := model.NewError(ERR_INVALID_DATA, fmt.Sprintf("User[%s]'s password[%s] error!", user.Name, user.Pwd))
+				erp := model.NewError(model.ERR_INVALID_DATA, fmt.Sprintf("User[%s]'s password[%s] error!", user.Name, user.Pwd))
 				render.JSON(422, erp)
 			} else {
 				if dbUser.Active == 0 {
@@ -235,7 +226,7 @@ func GetUser(session sessions.Session, db *gorp.DbMap, params martini.Params, re
 			}
 		}
 
-		render.JSON(404, model.NewError(ERR_USET_NOT_FOUND, fmt.Sprintf("User[%s] does not exist!", param)))
+		render.JSON(404, model.NewError(model.ERR_USER_NOT_FOUND, fmt.Sprintf("User[%s] does not exist!", param)))
 	}
 }
 
@@ -249,7 +240,7 @@ func ListUsers(session sessions.Session, db *gorp.DbMap, params martini.Params, 
 		if len(query) == 0 { // list all users
 			var users, err = model.GetAllUsers(db)
 			if err != nil {
-				render.JSON(404, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+				render.JSON(404, model.NewError(model.ERR_REQUEST_FAILED, err.Error()))
 			} else {
 				render.JSON(200, users)
 			}
@@ -305,7 +296,7 @@ func DeleteUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 			uid, err := strconv.Atoi(params["id"])
 			if err == nil {
 				if id == uid {
-					render.JSON(403, model.NewError(ERR_REQUEST_FAILED, "Can not delete admin!"))
+					render.JSON(403, model.NewError(model.ERR_REQUEST_FAILED, "Can not delete admin!"))
 				} else {
 					count, err := db.Delete(&model.User{ID: uid})
 					if err == nil {
@@ -313,18 +304,18 @@ func DeleteUser(session sessions.Session, db *gorp.DbMap, params martini.Params,
 							render.JSON(204, "Delete success!")
 						} else {
 							log.Printf("Delete user[%d] does not exist: %s", uid)
-							render.JSON(404, model.NewError(ERR_USET_NOT_FOUND, fmt.Sprintf("User[%d] does not exist!", uid)))
+							render.JSON(404, model.NewError(model.ERR_USER_NOT_FOUND, fmt.Sprintf("User[%d] does not exist!", uid)))
 						}
 					} else {
 						log.Printf("Delete tb_users error: %s", err.Error())
-						render.JSON(404, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+						render.JSON(404, model.NewError(model.ERR_REQUEST_FAILED, err.Error()))
 					}
 				}
 			} else {
-				render.JSON(404, model.NewError(ERR_INVALID_DATA, "Invalid Data!"))
+				render.JSON(404, model.NewError(model.ERR_INVALID_DATA, "Invalid Data!"))
 			}
 		} else {
-			render.JSON(403, model.NewError(ERR_REQUEST_FAILED, err.Error()))
+			render.JSON(403, model.NewError(model.ERR_REQUEST_FAILED, err.Error()))
 		}
 	}
 }

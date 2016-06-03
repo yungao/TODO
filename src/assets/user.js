@@ -1,27 +1,17 @@
 var user = {
-    session: null,
+    user: [],
 
-    login: function() {
-        var furl = $.url('?furl');
-        if (furl == null) furl = "index.html";
-        var name = $('#id-input-name').val();
-        var pwd = $('#id-input-pwd').val();
-        utils.doPost("/api/v1/user/login", {name:name, pwd:pwd}, function(data) {
-            window.location.href = furl;
-//            $('#id-errmsg').html("Hi " + data.nickname + ", welcome TODO!");
-        }, function(code, errmsg) {
-            $('#id-errmsg').html("HTTP " + code + ": " + errmsg);
-        });
-    },
-
-    checklogin:function(url,successFuc){
-        utils.doGet("/api/v1/user/login",function(data){
-            if(typeof(successFuc) != "undefined") successFuc(data);
-            console.log(data);
-        },function(code,errmsg){
-            console.log("HTTP " + code + ": " + errmsg);
+    checkLogin: function (url) {
+        var name = $.cookie('username');
+        var id = $.cookie('userid');
+        if (typeof(name) == 'undefined' || name == "" || typeof(id) == 'undefined' || id == "") {
             window.location.href = url;
-        });
+            return false;
+        }
+
+        user["name"] = name;
+        user["id"] = id;
+        return true;
     },
 
     logout: function() {

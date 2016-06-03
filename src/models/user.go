@@ -57,13 +57,17 @@ func newAdmin() *User {
 	}
 }
 
+func (user *User) IsEnable() bool {
+    return user.Active != -1
+}
+
 func (user *User) String() string {
 	return fmt.Sprintf("{ID:%d, Name:%s, Pwd:%s, Nickname:%s, Email:%s, Authority:%d, CreatorID:%d, CreateAt:%d, UpdateAt:%d, Active:%d}", user.ID, user.Name, user.Pwd, user.Nickname, user.Email, user.Authority, user.CreatorID, user.CreateAt, user.UpdateAt, user.Active)
 }
 
 // Create user table if not exist
 func CreateUserTable(db *gorp.DbMap) {
-	tb := db.AddTableWithName(User{}, config.TABLE_NAME_USER)
+	tb := db.AddTableWithName(User{}, config.TABLE_NAME_USERS)
 	tb.SetKeys(true, "id")
 	tb.ColMap("name").SetMaxSize(20).SetUnique(true).SetNotNull(true)
 	tb.ColMap("pwd").SetMaxSize(20).SetNotNull(true)
@@ -80,7 +84,7 @@ func CreateUserTable(db *gorp.DbMap) {
 	if err != nil {
 		panic(err)
 	}
-	log.Printf(">>> Table[%s] created", config.TABLE_NAME_USER)
+	log.Printf(">>> Table[%s] created", config.TABLE_NAME_USERS)
 
 	// create super admin
 	db.Insert(newAdmin())
@@ -191,7 +195,7 @@ func GetUsersByID(db *gorp.DbMap, ids []int) ([]*User, error) {
  */
 func GetUserByName(db *gorp.DbMap, name string) (*User, error) {
 	var user = User{}
-	err := db.SelectOne(&user, "SELECT * FROM "+config.TABLE_NAME_USER+" WHERE name = ?", name)
+	err := db.SelectOne(&user, "SELECT * FROM " + config.TABLE_NAME_USERS + " WHERE name = ?", name)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +222,7 @@ func GetUsersByName(db *gorp.DbMap, names []string) ([]*User, error) {
  */
 func GetAllUsers(db *gorp.DbMap) ([]*User, error) {
 	var users []*User
-	_, err := db.Select(&users, "SELECT * FROM "+config.TABLE_NAME_USER)
+	_, err := db.Select(&users, "SELECT * FROM "+config.TABLE_NAME_USERS)
 	if err != nil {
 		return nil, err
 	}

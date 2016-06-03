@@ -5,20 +5,21 @@ import (
 	"github.com/coopernurse/gorp"
 	"log"
 	"time"
+	"fmt"
+    "errors"
 )
 
 type Todo struct {
 	ID        int    `db:"id"        json:"id"`
 	CreatorID int    `db:"uid"       json:"uid"`
 	Name      string `db:"name"      json:"name"        form:"name"     binding:"required"`
-	Title     string `db:"title"     json:"title"       form:"title"    binding:"required"`
 	Content   string `db:"content"   json:"content"     form:"content"`
-	Priority  int8   `db:"priority"  json:"priority"    form:"priority" binding:"required"`
+	Priority  int8   `db:"priority"  json:"priority"    form:"priority"`
 	/* Type:
 	 *       0:  public
 	 *       1:  private
 	 */
-	Type     int8  `db:"type"      json:"type"        form:"type"     binding:"required"`
+	Type     int8  `db:"type"      json:"type"        form:"type"`
 	CreateAt int64 `db:"create"    json:"create"`
 	LimitAt  int64 `db:"limit"     json:"limit"       form:"limit"    binding:"required"`
 	UpdateAt int64 `db:"update"    json:"update"`
@@ -46,7 +47,6 @@ func CreateTodoTable(db *gorp.DbMap) {
 	tb.SetKeys(true, "id")
 	tb.ColMap("uid").SetNotNull(true)
 	tb.ColMap("name").SetMaxSize(100).SetNotNull(true)
-	tb.ColMap("title").SetMaxSize(255).SetNotNull(true)
 	tb.ColMap("content").SetMaxSize(2048)
 	tb.ColMap("priority").SetNotNull(true)
 	tb.ColMap("type").SetNotNull(true)
@@ -65,6 +65,40 @@ func CreateTodoTable(db *gorp.DbMap) {
 
 	log.Printf(">>> Table[%s] created", config.TABLE_NAME_TODOS)
 }
+
+func (todo *Todo) String() string {
+    return fmt.Sprintf("{ID:%d, CreatorID:%d, Name:%s, Content:%s, Priority:%d, Type:%d, CreateAt:%d, LimitAt:%d, UpdateAt:%d, Status:%d, ProcessCount:%d, Active:%d}", todo.ID, todo.CreatorID, todo.Name, todo.Content, todo.Priority, todo.Type, todo.CreateAt, todo.LimitAt, todo.UpdateAt, todo.Status, todo.ProcCount, todo.Active)
+}
+
+/*
+* Query todo info from database by ID
+ */
+func GetTodoByID(db *gorp.DbMap, id int) (*Todo, error) {
+	ret, err := db.Get(Todo{}, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if todo, ok := ret.(*Todo); ok {
+		return todo, nil
+	}
+
+	return nil, errors.New("Todo does not exist!")
+}
+
+/*
+* Query all todos info from database
+ */
+func GetAllTodos(db *gorp.DbMap) ([]*Todo, error) {
+	var todos []*Todo
+	_, err := db.Select(&todos, "SELECT * FROM " + config.TABLE_NAME_TODOS)
+	if err != nil {
+		return nil, err
+	}
+
+	return todos, nil
+}
+
 
 func (todo *Todo) PreInsert(s gorp.SqlExecutor) error {
 	todo.CreateAt = time.Now().Unix()
