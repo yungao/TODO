@@ -11,8 +11,10 @@ import (
 
 type Todo struct {
 	ID        int    `db:"id"        json:"id"`
-	CreatorID int    `db:"uid"       json:"uid"`
+	CreatorID int    `db:"uid"       json:"-"`
+	Creator   *User  `db:"-"         json:"creator"`
 	Name      string `db:"name"      json:"name"        form:"name"     binding:"required"`
+	// Name      string `db:"name"      json:"name"        form:"name"`
 	Content   string `db:"content"   json:"content"     form:"content"`
 	Priority  int8   `db:"priority"  json:"priority"    form:"priority"`
 	/* Type:
@@ -34,7 +36,10 @@ type Todo struct {
 	 *       0:  diabled
 	 *       1:  normal
 	 */
-	Active int8 `db:"active"    json:"active"`
+	Active     int8         `db:"active"    json:"active"`
+
+	Processes  []*Process   `db:"-"         json:"processes"`
+	Partners   []*Partner   `db:"-"         json:"partners"`
 }
 
 type Todos struct {
@@ -91,7 +96,7 @@ func GetTodoByID(db *gorp.DbMap, id int) (*Todo, error) {
  */
 func GetAllTodos(db *gorp.DbMap) ([]*Todo, error) {
 	var todos []*Todo
-	_, err := db.Select(&todos, "SELECT * FROM " + config.TABLE_NAME_TODOS)
+	_, err := db.Select(&todos, "SELECT * FROM " + config.TABLE_NAME_TODOS + " ORDER BY " + config.TABLE_NAME_TODOS + ".update DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +104,9 @@ func GetAllTodos(db *gorp.DbMap) ([]*Todo, error) {
 	return todos, nil
 }
 
+func (todo *Todo) IsEnable() bool {
+    return todo.Active != -1
+}
 
 func (todo *Todo) PreInsert(s gorp.SqlExecutor) error {
 	todo.CreateAt = time.Now().Unix()

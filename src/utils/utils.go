@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"net/http"
 
 	"github.com/martini-contrib/render"
 	"github.com/martini-contrib/sessions"
@@ -33,6 +34,31 @@ func ParseSession(session sessions.Session, render render.Render) (int, string, 
 	render.JSON(401, "Unauthorized")
 
 	return -1, "", errors.New("Unauthorized")
+}
+
+func ParseUserAgent(request *http.Request) string {
+    agent := strings.ToLower(request.Header.Get("User-Agent"))
+    if agent == "" {
+        return "UFO"
+    } else {
+        if strings.Contains(agent, "android") {
+            return "Android"
+        } else if strings.Contains(agent, "iphone") {
+            return "iPhone"
+        } else if strings.Contains(agent, "mobile") {
+            return "Mobile"
+        } else if strings.Contains(agent, "msie") {
+            return "MSIE"
+        } else if strings.Contains(agent, "chrome") {
+            return "Chrome"
+        } else if strings.Contains(agent, "firefox") {
+            return "FireFox"
+        } else if strings.Contains(agent, "trident") && strings.Contains(agent, "like gecko") {
+            return "MSIE 11"
+        } else {
+            return "Browser"
+        }
+    }
 }
 
 func IsEmpty(s string) bool {

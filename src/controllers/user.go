@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	// "regexp"
+    "errors"
 
 	"github.com/coopernurse/gorp"
 	"github.com/go-martini/martini"
@@ -18,6 +19,22 @@ import (
 	model "models"
 	utils "utils"
 )
+
+/**
+* Check user id enabled
+*/
+func CheckUserEnable(db *gorp.DbMap, uid int) (*model.User, int, error) {
+    user, err := model.GetUserByID(db, uid)
+    if err != nil {
+        return nil, model.ERR_USER_NOT_FOUND, err
+    } else {
+        if !user.IsEnable() {
+            return nil, model.ERR_USER_NOT_FOUND, errors.New("User is disabled!")
+        }
+    }
+
+    return user, 0, nil
+}
 
 /**
 * Create a new user, to user register

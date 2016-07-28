@@ -5,12 +5,14 @@ import (
 	"github.com/coopernurse/gorp"
 	"log"
 	"time"
+	"fmt"
 )
 
 type Process struct {
 	ID        int    `db:"id"        json:"id"`
 	TodoID    int    `db:"todoid"    json:"todoid"    form:"todoid"      binding:"required"`
-	CreatorID int    `db:"uid"       json:"uid"`
+	CreatorID int    `db:"uid"       json:"-"`
+	Creator   *User  `db:"-"         json:"creator"`
 	Partners  string `db:"partners"  json:"partners"  form:"partners"`
 	Tags      string `db:"tags"      json:"tags"      form:"tags"`
 	/** Action:
@@ -26,7 +28,7 @@ type Process struct {
 	Content     string `db:"content"   json:"content"   form:"content"`
 	AttachCount int    `db:"fcount"    json:"fcount"`
 	UpdateAt    int64  `db:"update"    json:"update"`
-	Agent       string `db:"agent"     json:"agent"`
+	UserAgent   string `db:"agent"     json:"agent"`
 	/* Active:
 	 *       -1: deleted
 	 *       1:  normal
@@ -62,6 +64,19 @@ func CreateProcessTable(db *gorp.DbMap) {
 	log.Printf(">>> Table[%s] created", config.TABLE_NAME_TODO_PROCESS)
 }
 
+/*
+* Query todo processes from database by todo ID
+ */
+func GetTodoProcesses(db *gorp.DbMap, id int) ([]*Process, error) {
+	var processes []*Process
+	_, err := db.Select(&processes, fmt.Sprintf("SELECT * FROM %s  WHERE todoid=%d ORDER BY %s.update DESC", config.TABLE_NAME_TODO_PROCESS, id, config.TABLE_NAME_TODO_PROCESS))
+	if err != nil {
+		return nil, err
+	}
+
+	return processes, nil
+}
+
 func (proc *Process) PreInsert(s gorp.SqlExecutor) error {
 	proc.UpdateAt = time.Now().Unix()
 	proc.Active = 1
@@ -72,3 +87,4 @@ func (proc *Process) PreInsert(s gorp.SqlExecutor) error {
 // 	proc.UpdateAt = time.Now().Unix()
 // 	return nil
 // }
+

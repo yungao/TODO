@@ -19,6 +19,8 @@ const (
 
     // ======== Todo ==========
 	ERR_TODO_NOT_FOUND = 40111
+	ERR_TODO_DISABLED  = 40112
+	ERR_TODO_USER_PERM = 40113
     // ========================
 
 )

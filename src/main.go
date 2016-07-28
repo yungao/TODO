@@ -50,7 +50,7 @@ func main() {
 	app.Map(db)
 
 	// set asset directory
-	app.Use(martini.Static("assets"))
+	app.Use(martini.Static("gui"))
 	// use martini logger
 	// app.Use(martini.Logger())
 	// use martini-contrib/render
@@ -59,6 +59,7 @@ func main() {
 	store := sessions.NewCookieStore([]byte("todo2016@etech"))
 	store.Options(sessions.Options{
 		MaxAge: 2 * 60 * 60, // 2*60*60s
+        Path: "/",
 	})
 	app.Use(sessions.Sessions("session", store))
 
@@ -97,6 +98,11 @@ func main() {
 			router.Get("/:id", control.GetTodo)
 			// list todo, can filter
 			router.Get("", control.ListTodos)
+			// update todo
+			router.Patch("/:id", control.UpdateTodo)
+
+			// add todo partner
+			router.Post("/partner", binding.Bind(model.Partner{}), control.AddPartner)
 		})
 
 	})

@@ -1,0 +1,48 @@
+<div id="addTodo" class="modal fade" tabindex="-1">
+    <div class="modal-dialog" style="width:440px;">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align:center;font-size:14px;">
+                <h4 class="modal-title color-green">
+                    <span class="glyphicon glyphicon-pencil"></span>&nbsp;<span translate>新建任务</span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" name="todoEditor">
+                    <div class="form-group" ng-class="{'has-error': todoEditor.name.$dirty && todoEditor.name.$invalid}">
+                        <span translate for="name">任务名称</span>
+                        <input name="name" id="name" class="form-control text-monospace" placeholder="任务主题" type="text" maxlength="99" ng-model="newTodo.name" required/>
+                        <span class="errMsg" ng-show="todoEditor.name.$dirty && todoEditor.name.$invalid">请输入任务主题！</span>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': todoEditor.content.$dirty && todoEditor.content.$invalid}">
+                        <span translate for="name">任务内容</span>
+                        <textarea name="content" id="content" class="form-control" rows="4" placeholder="任务内容" maxlength="2047" ng-model="newTodo.content" required></textarea>
+                        <span class="errMsg" ng-show="todoEditor.content.$dirty && todoEditor.content.$invalid">请输入任务内容！</span>
+                    </div>
+                    <div class="input-group" ng-class="{'has-error': todoEditor.limit.$dirty && todoEditor.limit.$invalid}">
+                        <span translate class="input-group-addon">到期时间</span>
+                        <input name="limit" id="limit" type="text" class="form-control" placeholder="到期时间" data-date-format="yyyy-mm-dd" ng-model="newTodo.flimit" required/>
+                    </div>
+                    <div style="height:35px; margin:15px 0px 10px 0px;">
+                        <label class="input-group color-red" style="width:45%; float:left;">
+                            <span class="input-group-addon">
+                                <input name="priority" id="priority" type="checkbox" ng-model="newTodo.priority" ng-true-value="1" ng-false-value="0"/>
+                            </span>
+                            <span class="form-control">紧急任务</span>
+                        </label>
+                        <label class="input-group color-red" style="width:45%; margin-left:10%; float:left;">
+                            <span class="input-group-addon">
+                                <input name="type" id="type" type="checkbox" ng-model="newTodo.type" ng-true-value="1" ng-false-value="0">
+                            </span>
+                            <span class="form-control">仅自己可见</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" ng-click="saveNewTodo()" ng-disabled="todoEditor.$invalid" style="width:100%;">
+                    <span translate>创建新任务</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

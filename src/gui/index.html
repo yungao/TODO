@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TODO</title>
+	<meta http-equiv="cache-control" content="no-cache,no-store,must-revalidate" />
+    <link rel="icon" href="/assets/img/ic_title.png" type="image/x-icon"/>
+
+    <script type="text/javascript" src="/assets/jslib/jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="/assets/jslib/jquery.cookie.js"></script>
+	<script type="text/javascript" src="/assets/jslib/angular.min.js"></script>
+	<script type="text/javascript" src="/assets/jslib/url.js"></script>
+	
+    <link rel="stylesheet" href="/assets/artdialog-6.0.4/css/ui-dialog.css">
+    <script src="/assets/artdialog-6.0.4/dist/dialog-min.js"></script>
+    <link href="/assets/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css" media="screen" />
+    <script type="text/javascript" src="/assets/bootstrap/js/bootstrap.js"></script>
+	<link href="/assets/datetimepicker/css/bootstrap-datetimepicker.css" rel="stylesheet" type="text/css" media="screen"/>
+	<script type="text/javascript" src="/assets/datetimepicker/js/bootstrap-datetimepicker.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="/assets/datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js" charset="UTF-8"></script>
+	<link rel="stylesheet" type="text/css" href="/assets/icheck/skins/square/blue.css" />
+	<link rel="stylesheet" type="text/css" href="/assets/icheck/skins/flat/red.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/icheck/skins/flat/pink.css" />
+	<script src="/assets/icheck/icheck.min.js"></script>
+
+    <link href="/assets/css/main.css" rel="stylesheet" type="text/css" media="screen" />
+    <link href="/assets/css/color.css" rel="stylesheet" type="text/css" media="screen" />
+
+    <!--[if lt IE 9]>
+    <script src="/assets/jslib/html5shiv.js"></script>
+    <script src="/assets/jslib/respond.js"></script>
+    <![endif]-->
+</head>
+
+<body ng-app="app" ng-controller="todoCtrl" style="padding-top:90px;">
+    <nav class="navbar navbar-fixed-top navbar-inverse gradientBg opacity-9" role="navigation" style="font-size:16px; border-radius:0px; padding:0 20px;">
+        <!--<div class="container">-->
+        <div>
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">
+                    <img class="logo hidden-xs" src="/assets/img/logo_todo_white.png" height="35px;" style="margin-right:40px;"/>
+                </a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">任务</a></li>
+                </ul>
+                <ul class="nav navbar-nav">
+                    <li><a href="#">通知</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li style="margin-right:20px;"><a href="#" ng-click="addTodo()"><span class="glyphicon glyphicon-plus"></span> 新建任务</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <img class="roundProfile" ng-src="{{ userProfile(user) }}" style="background:white; width:40px; height:40px;"/>&nbsp;<span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#"><span class="glyphicon glyphicon-cog"></span> 设置</a></li>
+                            <li><a href="#"><span class="glyphicon glyphicon-user"></span> 用户管理</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#" ng-click="aboutTodo()"><span class="glyphicon glyphicon-exclamation-sign"></span> 关于</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div ng-show="todos.length <= 0" style="height:100%; text-align:center; vertical-align:middle;">
+        <a href="#" ng-click="addTodo()" style="display:inline-block; font-size:20px; color:gray;">
+            <span class="glyphicon glyphicon-plus" style="margin-top:80%;"></span>
+            </br>
+            您还没有任务，点击创建
+        </a>
+    </div>
+
+    <!--<div class="container">-->
+    <div style="height:94%;" ng-show="todos.length > 0">
+        <div class="col-md-1"></div>
+        <div class="col-md-3">
+            <div class="panel-group" id="todos">
+                <div ng-repeat="todo in todos" class="panel panel-{{todo.priority == 0 ? 'default' : 'danger'}}">
+                    <div class="panel-heading">
+                        <a data-toggle="collapse" data-parent="#todos" href="#todo-{{$index}}" ng-click="todoDetails(todo, $index)">
+                            <div class="panel-title panel-title-text">
+                                <span class="glyphicon glyphicon-{{todo.uid == user.id ? 'user' : 'comment'}}"></span>&nbsp;
+                                <span tooltip data-original-title="{{todo.name}}" style="font-size:17px;">{{todo.name}}</span>
+                                <div class="pull-right" style="font-size:15px;">
+                                    <span class="glyphicon glyphicon-lock" ng-show="{{ todo.type == 1 }}"></span>&nbsp;
+                                    <span class="glyphicon glyphicon-calendar"></span> {{ todo.limit * 1000 | date:"yyyy-MM-dd" }}
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div id="todo-{{$index}}" class="panel-collapse collapse {{ $index == 0 ? 'in' : '' }}">
+                        <div class="panel-body" style="font-size:15px;">
+                            <!--<span style="font-size:18px;">&nbsp;&nbsp;{{ todo.content.length == 0 ? '（没有内容）' : todo.content }}</span>-->
+                            <table class="table table-condensed table-striped" style="margin-top:20px;">
+                                <tbody>
+                                <tr>
+                                    <th>
+                                        <span class="glyphicon glyphicon-user"></span>&nbsp;创建者
+                                    </th>
+                                    <td class="text-right">
+                                        <span class="user-info" tooltip data-original-title="{{ userTooltip(todo.creator) }}">{{ todo.creator.name }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>
+                                        <span class="glyphicon glyphicon-wrench"></span>&nbsp;执行者
+                                    </th>
+                                    <td class="text-right">{{ todo.userName }}</td>
+                                </tr>
+                                <tr>
+                                    <th>
+                                        <span class="glyphicon glyphicon-map-marker"></span>&nbsp;创建时间
+                                    </th>
+                                    <td class="text-right">{{ todo.create * 1000 | date:"yyyy-MM-dd" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>
+                                        <span class="glyphicon glyphicon-calendar"></span>&nbsp;截止时间
+                                    </th>
+                                    <td class="text-right">{{ todo.limit * 1000 | date:"yyyy-MM-dd" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>
+                                        <span class="glyphicon glyphicon-time"></span>&nbsp;最后更新
+                                    </th>
+                                    <td class="text-right">{{ todo.update * 1000 | date:"yyyy-MM-dd" }}</td>
+                                </tr>
+                                <tr>
+                                    <!-- bottom line -->
+                                    <th></th><td class="text-right"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="panel-footer clearfix">
+                            <div class="pull-right">
+                                <button type="button" class="btn btn-sm btn-success" ng-click="doneTodo(todo)">
+                                    <span class="glyphicon glyphicon-ok"></span>&nbsp;<span translate>完成</span>
+                                </button>
+                                &nbsp;&nbsp;
+                                <button type="button" class="btn btn-sm btn-danger" ng-click="deleteTodo(todo)">
+                                    <span class="glyphicon glyphicon-trash"></span>&nbsp;<span translate>删除</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3" style="height:100%;">
+            <div id="curTodo" class="panel panel-{{curTodo.priority == 0 ? 'default' : 'danger'}}" ng-show="curTodo != null" style="height:100%;">
+                <div class="panel-heading" style="font-size:17px; color:black;">
+                    <span class="glyphicon glyphicon-bookmark"></span>&nbsp;{{curTodo.name}}
+                </div>
+                <div class="row panel-body" style="height:100%;">
+                    <div class="col-md-12" style="height:100%;">
+                        <p style="font-size:16px;">{{ curTodo.content.length == 0 ? '（没有内容）' : curTodo.content }}</p>
+                        </br>
+                        <div class="roundBox" style="border:1px solid lightgray; margin:0px;">
+                            <div class="row" style="margin:0px; heigt:70px;">
+                               <div class="col-xs-6" style="border-right:1px solid lightgray; padding:5px 15px; height:72px;">
+                                    <label>截止时间</label>
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><span class=" glyphicon glyphicon-calendar"></span></span>
+                                        <input id="limit" type="text" class="form-control" data-date-format="yyyy-mm-dd" ng-disabled="curTodo.creator.id != user.id" ng-model="curTodo.flimit" ng-change="modifyTodo(5)"/>
+                                    </div>
+                                </div>
+                                <div class="col-xs-6" style="padding:5px 15px; height:72px;">
+                                    <label>优先级</label>
+                                    <label class="input-group color-red">
+                                        <span class="input-group-addon">
+                                            <input name="priority" id="priority" type="checkbox" ng-disabled="curTodo.creator.id != user.id" ng-model="curTodo.priority" ng-true-value="1" ng-false-value="0" ng-click="modifyTodo(6)"/>
+                                        </span>
+                                        <span class="form-control">紧急任务</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div style="border-top:1px solid lightgray; padding:5px 15px;">
+                                <label>执行者</label>
+                                <div style="padding-top:5px;">
+                                    <img class="roundProfile" tooltip data-original-title="{{ user.name }}" ng-src="{{ userProfile(user) }}" style="background:white; width:30px; height:30px;"/>
+                                    UserID:{{ curTodo.uid }}
+                                </div>
+                            </div>
+
+                            <div style="border-top:1px solid lightgray;padding:5px 15px; height:70px;">
+                                <label>参与者</label>
+                                <div>
+                                    <div ng-repeat="partner in curTodo.partners">
+                                        <img class="roundProfile" tooltip data-original-title="{{ partner.partner.name }}" ng-src="{{ userProfile(partner.partner) }}" style="background:white; width:30px; height:30px; float:left; margin-right:7px;"/>
+                                    </div>
+                                    <span class="glyphicon glyphicon-plus-sign hover-pointer" tooltip data-original-title="添加参与者" style="font-size:30px;" ng-click="selectUsers()"></span>
+                                </div>
+                            </div>
+                            <div style="border-top:1px solid lightgray;padding:5px 15px; height:70px;">
+                                <label>标签</label>
+                                <div>
+                                    <span class="badge badge-tag badge-success" tooltip data-original-title="BUG">BUG</span>
+                                    <span class="badge badge-tag badge-inverse glyphicon glyphicon-plus-sign" tooltip data-original-title="添加标签">&nbsp;</span>
+                                </div>
+                            </div>
+
+                        </div>
+                        <hr align="center" size=20 style="color:gray; margin:20px -14px;"></hr>
+                        </br>
+                        <form role="form" name="todoUpdate">
+                            <div class="form-group" style="background:lightgray; bottom:15px; right:0px; left:0px; padding:20px 10px 20px 10px; position:absolute;" ng-class="{'has-error': todoUpdate.content.$dirty && todoUpdate.content.$invalid}">
+                                <textarea name="content" type="text" class="form-control" rows="2" placeholder="更新任务，@他人" maxlength="2047" ng-model="update.content" required></textarea>
+                                <div style="margin-top:10px;">
+                                    <a class="dropdown-toggle hover-pointer" data-toggle="dropdown" aria-expanded="false" style="padding:3px;">
+                                        <span class="glyphicon glyphicon-paperclip"></span>&nbsp;附件<!--<span class="caret"></span>-->
+                                    </a>
+                                    <button class="btn btn-success pull-right" type="button" ng-disabled="todoUpdate.$invalid" ng-click="updateTodo()">&nbsp;<span class="glyphicon glyphicon-send"></span>&nbsp;发送</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4" style="height:100%;">
+            <div class="panel panel-{{curTodo.priority == 0 ? 'default' : 'danger'}}" ng-show="curTodo != null" style="height:100%;">
+                <div class="panel-heading" style="font-size:17px; color:black;">
+                    <span class="glyphicon glyphicon-comment"></span>&nbsp;处理与讨论
+                    <span class="badge badge-error">{{ curTodo.processes.length }}</span>
+                    <span class="pull-right glyphicon glyphicon-refresh" ng-click="todoDetails(curTodo, curIndex)"></span>
+                </div>
+                <div class="panel-body" style="height:94%; overflow:auto;">
+                    <div ng-repeat="process in curTodo.processes">
+                        <div>
+                            <img class="pull-left roundProfile" ng-src="{{ userProfile(user) }}" style="background:white; width:40px; height:40px;"/>
+                            <div style="margin-left:50px;">
+                                <div>
+                                    <span class="user-info" tooltip data-original-title="{{ process.creator.nickname }}:&nbsp;&nbsp;{{ process.creator.email }}">{{ process.creator.name }}</span>
+                                    <span tooltip data-original-title="{{ process.update * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}" class="pull-right">{{ formatTime(process.update) }}</span>
+                                </div>
+                                <span class="{{ processActionIcon(process) }}"></span>&nbsp;<span ng-bind="processContent(process, 0)"></span>&nbsp;<span class="color-green" ng-bind="processContent(process, 1)"></span>
+                            </div>
+                        </div>
+                        <span class="pull-right" style="font-size:12px; color:gray;">来自: {{ process.agent }}</span>
+                        <hr align=right style="width:95%; color:lightgray;"></hr>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-1">
+        </div>
+    </div>
+
+    <div add-todo-modal></div> 
+    <div about-modal></div> 
+    <div select-user-modal></div> 
+
+    <!-- js -->
+    <script type="text/javascript">
+$(function () {
+        $('[data-toggle="popover"]').popover()
+        })
+    </script>
+    <script type="text/javascript" src="app.js"></script>
+    <script type="text/javascript" src="todo.js"></script>
+
+    <!-- Directive js-->
+    <script type="text/javascript" src="todo/addTodoModalDirective.js"></script>
+    <script type="text/javascript" src="about/aboutModalDirective.js"></script>
+    <script type="text/javascript" src="user/selectUserModalDirective.js"></script>
+    <script type="text/javascript" src="todo/tooltipDirective.js"></script>
+
+</body>
+</html>

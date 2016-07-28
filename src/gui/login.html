@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!-- TODO source code by gaoyun@eli-tech.com 2016 -->
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="cache-control" content="no-store" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>TODO Login</title>
+    <link rel="icon" href="/assets/img/ic_title.png" type="image/x-icon"/>
+    
+    <script type="text/javascript" src="/assets/jslib/jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="/assets/jslib/jquery.cookie.js"></script>
+    <script type="text/javascript" src="/assets/jslib/angular.min.js"></script>
+    
+    <link href="/assets/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css" media="screen" />
+    <link href="/assets/css/main.css" rel="stylesheet" type="text/css" media="screen" />
+    <link href="/assets/css/color.css" rel="stylesheet" type="text/css" media="screen" />
+    <script type="text/javascript" src="/assets/bootstrap/js/bootstrap.js"></script>
+    <script type="text/javascript" src="/assets/jslib/url.js"></script>
+    <script type="text/javascript" src="app.js"></script>
+    <script type="text/javascript" src="login.js"></script>
+
+    <!--[if lt IE 9]>
+        <script src="/assets/jslib/html5shiv.js"></script>
+        <script src="/assets/jslib/respond.js"></script>
+    <![endif]-->
+    
+    <script>
+        $(document).ready(function(){
+        });
+    </script>
+
+    <style type="text/css">
+        input.ng-invalid {
+            background-color: #FF99CC;
+        }
+        input.ng-valid {
+            background-color: white;
+        }
+    </style>
+</head>
+
+<body class="gradientBg">
+    <div class="wrapper">
+        <form ng-app="app" name="loginForm" ng-controller="loginCtrl" novalidate>
+            <div class="loginBox">
+                <div style="text-align:center;">
+                    <img src="/assets/img/logo_todo_white.png" style="width:180px; align:middle; margin:auto auto;"/>
+                </div>
+
+                <div class="roundBox" style="padding:30px 45px; margin-top:40px;">
+                    <!--<span style="font-size:22px;">TODO登录</span>-->
+
+                    <input type="text" class="form-control" style="margin-top:20px;" placeholder="用户名" name="user" ng-model="user" required>
+                    <span class="errMsg" ng-show="loginForm.user.$dirty && loginForm.user.$error.required">用户名不能为空！</span>
+
+                    <input type="password" class="form-control" style="margin-top:30px;" placeholder="密码" name="pwd" ng-model="pwd" required>
+                    <span class="errMsg" ng-show="loginForm.pwd.$dirty && loginForm.pwd.$error.required">密码不能为空！</span>
+
+                    <button class="btn btn-primary" style="width:100%; margin-top:60px;" ng-click="login()" ng-disabled="loginForm.user.$error.required || loginForm.pwd.$error.required">登录</button>
+                    <span class="pull-right errMsg" id="errorLogin" style="margin-top:5px; display:none;"></span>
+                </div>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

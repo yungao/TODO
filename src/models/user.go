@@ -21,6 +21,7 @@ type User struct {
 	Pwd      string `db:"pwd"       json:"-"            form:"pwd"      binding:"required"`
 	Nickname string `db:"nickname"  json:"nickname"     form:"nickname"`
 	Email    string `db:"email"     json:"email"        form:"email"`
+	Profile  string `db:"profile"   json:"profile"      form:"profile"`
 	/* Authority:
 	 *      -1:  super admin (create default)
 	 *      0:   normal
@@ -49,6 +50,7 @@ func newAdmin() *User {
 		Pwd:       "123456",
 		Nickname:  "管理员",
 		Email:     "admin@todo.com",
+		Profile:   "",
 		Authority: -1,
 		CreatorID: 0,
 		CreateAt:  time.Now().Unix(),
@@ -62,7 +64,7 @@ func (user *User) IsEnable() bool {
 }
 
 func (user *User) String() string {
-	return fmt.Sprintf("{ID:%d, Name:%s, Pwd:%s, Nickname:%s, Email:%s, Authority:%d, CreatorID:%d, CreateAt:%d, UpdateAt:%d, Active:%d}", user.ID, user.Name, user.Pwd, user.Nickname, user.Email, user.Authority, user.CreatorID, user.CreateAt, user.UpdateAt, user.Active)
+    return fmt.Sprintf("{ID:%d, Name:%s, Pwd:%s, Nickname:%s, Email:%s, Profile:%s, Authority:%d, CreatorID:%d, CreateAt:%d, UpdateAt:%d, Active:%d}", user.ID, user.Name, user.Pwd, user.Nickname, user.Email, user.Profile, user.Authority, user.CreatorID, user.CreateAt, user.UpdateAt, user.Active)
 }
 
 // Create user table if not exist
@@ -73,6 +75,7 @@ func CreateUserTable(db *gorp.DbMap) {
 	tb.ColMap("pwd").SetMaxSize(20).SetNotNull(true)
 	tb.ColMap("nickname").SetMaxSize(100)
 	tb.ColMap("email").SetMaxSize(100)
+	tb.ColMap("profile").SetMaxSize(100)
 	tb.ColMap("auth").SetNotNull(true)
 	tb.ColMap("uid").SetNotNull(true)
 	tb.ColMap("create").SetNotNull(true)
