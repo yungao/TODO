@@ -153,7 +153,7 @@ angular.module('app')
         $scope.allUsers = function() {
             http.get("/user", {}, function(data) {
                 $scope.users = data;
-                logger.info("Users: " + JSON.stringify(data));
+                // logger.info("Users: " + JSON.stringify(data));
             }, function(code, errmsg) {
                 logger.error(code + ": " + errmsg);
             });
@@ -362,6 +362,10 @@ angular.module('app')
 
         $scope.selectUsers = function () {
             $("#selectUser").modal('show');
+        };
+
+        $scope.selectTags = function () {
+            $("#selectTag").modal('show');
         };
 
         $scope.user = storage.getUser();

@@ -123,21 +123,29 @@ func GetTodo(session sessions.Session, db *gorp.DbMap, params martini.Params, re
                 }
 
                 processes, err := model.GetTodoProcesses(db, todo.ID)
-                todo.Processes = processes
-                for _, process := range todo.Processes {
-                    exist := false
-                    for _, partner := range todo.Partners {
-                        if process.CreatorID == partner.UserID {
-                            process.Creator = partner.Creator
-                            exist = true
-                            break;
+                if err == nil {
+                    todo.Processes = processes
+                    for _, process := range todo.Processes {
+                        exist := false
+                        for _, partner := range todo.Partners {
+                            if process.CreatorID == partner.UserID {
+                                process.Creator = partner.Creator
+                                exist = true
+                                break;
+                            }
+                        }
+
+                        if !exist {
+                            process.Creator, _ = model.GetUserByID(db, process.CreatorID)
                         }
                     }
-
-                    if !exist {
-                        process.Creator, _ = model.GetUserByID(db, process.CreatorID)
-                    }
                 }
+
+                // todo.Tags, err = model.GetTagsByTodoID(db, todo.ID)
+                if err != nil {
+                    log.Printf("Get Todo Tags Error: ", err.Error())
+                }
+
                 if err == nil {
                     render.JSON(200, todo)
                     return
@@ -214,17 +222,9 @@ func ListTodos(session sessions.Session, db *gorp.DbMap, params martini.Params, 
 }
 
 func doUpdateTodo(db *gorp.DbMap, user *model.User, todo *model.Todo, render render.Render, request *http.Request) {
-    var hasPermission = (todo.Type == 0)
+    hasPermission := (todo.Type == 0)
     if !hasPermission {
-        hasPermission = (user.ID == todo.CreatorID)
-    }
-
-    partners, _ := model.GetPartnersByTodoID(db, todo.ID)
-    for _, p := range partners {
-        if p.PartnerID == user.ID {
-            hasPermission = true
-            break;
-        }
+        hasPermission, _ = IsTodoPartner(db, todo, user)
     }
 
     if hasPermission {

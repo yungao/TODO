@@ -5,6 +5,8 @@ import (
 	"github.com/coopernurse/gorp"
 	"log"
 	"time"
+	"fmt"
+	"errors"
 )
 
 type Tag struct {
@@ -50,6 +52,26 @@ func (tag *Tag) PreInsert(s gorp.SqlExecutor) error {
 	return nil
 }
 
+func (tag *Tag) String() string {
+    return fmt.Sprintf("{ID:%d, CreatorID:%d, Name:%s, Remark:%s, CreateAt:%d, Active:%d}", tag.ID, tag.CreatorID, tag.Name, tag.Remark, tag.CreateAt, tag.Active)
+}
+
+/*
+* Query Tag from database by ID
+ */
+func GetTagByID(db *gorp.DbMap, id int) (*Tag, error) {
+	ret, err := db.Get(Tag{}, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if tag, ok := ret.(*Tag); ok {
+		return tag, nil
+	}
+
+	return nil, errors.New("Tag does not exist!")
+}
+
 // func (tag *Tag) PreUpdate(s gorp.SqlExecutor) error {
 // 	tag.UpdateAt = time.Now().Unix()
 // 	return nil
@@ -59,6 +81,8 @@ type TodoTag struct {
 	ID     int `db:"id"        json:"id"`
 	TodoID int `db:"todoid"    json:"todoid"     form:"todoid"  binding:"required"`
 	TagID  int `db:"tagid"     json:"tagid"      form:"tagid"   binding:"required"`
+	Tag    *Tag `db:"-"     json:"tag"`
+	CreatorID   int    `db:"uid"       json:"-"`
 	/* Active:
 	 *       -1: deleted
 	 *       1:  normal
@@ -93,6 +117,21 @@ func (ttag *TodoTag) PreInsert(s gorp.SqlExecutor) error {
 	return nil
 }
 
+func (tag *TodoTag) String() string {
+    return fmt.Sprintf("{ID:%d, TodoID:%d, TagID:%d, Active:%d}", tag.ID, tag.TodoID, tag.TagID, tag.Active)
+}
 // func (ttag *TodoTag) PreUpdate(s gorp.SqlExecutor) error {
 // 	return nil
 // }
+
+func GetTagsByTodoID(db *gorp.DbMap, tid int) ([]*TodoTag, error) {
+    var tags []*TodoTag
+	_, err := db.Select(tags, fmt.Sprintf("SELECT * FROM %s WHERE %s.todoid=%d", config.TABLE_NAME_TODO_TAGS, config.TABLE_NAME_TODO_TAGS, tid))
+    if err == nil {
+        for _, tag := range tags {
+            tag.Tag, err = GetTagByID(db, tag.ID)
+        }
+    }
+
+    return tags, err
+}

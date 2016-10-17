@@ -210,7 +210,7 @@
                                 <label>标签</label>
                                 <div>
                                     <span class="badge badge-tag badge-success" tooltip data-original-title="BUG">BUG</span>
-                                    <span class="badge badge-tag badge-inverse glyphicon glyphicon-plus-sign" tooltip data-original-title="添加标签">&nbsp;</span>
+                                    <span class="badge badge-tag badge-inverse glyphicon glyphicon-plus-sign" tooltip data-original-title="添加标签" ng-click="selectTags()"> </span>
                                 </div>
                             </div>
 
@@ -266,13 +266,9 @@
     <div add-todo-modal></div> 
     <div about-modal></div> 
     <div select-user-modal></div> 
+    <div select-tag-modal></div> 
 
     <!-- js -->
-    <script type="text/javascript">
-$(function () {
-        $('[data-toggle="popover"]').popover()
-        })
-    </script>
     <script type="text/javascript" src="app.js"></script>
     <script type="text/javascript" src="todo.js"></script>
 
@@ -280,7 +276,9 @@ $(function () {
     <script type="text/javascript" src="todo/addTodoModalDirective.js"></script>
     <script type="text/javascript" src="about/aboutModalDirective.js"></script>
     <script type="text/javascript" src="user/selectUserModalDirective.js"></script>
+    <script type="text/javascript" src="tag/selectTagModalDirective.js"></script>
     <script type="text/javascript" src="todo/tooltipDirective.js"></script>
+    <!--<script type="text/javascript" src="todo/popoverDirective.js"></script>-->
 
 </body>
 </html>

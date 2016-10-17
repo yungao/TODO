@@ -16,10 +16,14 @@ import (
 	utils "utils"
 )
 
-// func isPartnerExist(db *gorp.DbMap, tid int, pid int) (bool, error) {
-// 	rows, err := db.Select(model.Partner{}, fmt.Sprintf("SELECT * FROM %s WHERE %s.todoid=%d AND %s.pid=%d", config.TABLE_NAME_TODO_PARTNER, config.TABLE_NAME_TODO_PARTNER, tid, config.TABLE_NAME_TODO_PARTNER, pid))
-//     return len(rows) > 0, err
-// }
+func IsTodoPartner(db *gorp.DbMap, todo *model.Todo, user *model.User) (bool, error) {
+    if user.ID == todo.CreatorID {
+        return true, nil
+    }
+
+	rows, err := db.Select(model.Partner{}, fmt.Sprintf("SELECT * FROM %s WHERE %s.todoid=%d AND %s.pid=%d", config.TABLE_NAME_TODO_PARTNER, config.TABLE_NAME_TODO_PARTNER, todo.ID, config.TABLE_NAME_TODO_PARTNER, user.ID))
+    return len(rows) > 0, err
+}
 
 /**
 * Add Todo Partner
@@ -32,20 +36,27 @@ func AddPartner(session sessions.Session, partner model.Partner, db *gorp.DbMap,
         if err == nil {
             todo, code, err := CheckTodoEnable(db, partner.TodoID)
             if err == nil {
-                if uid != partner.PartnerID {
-                    partner.UserID = uid
-                    err = db.Insert(&partner)
-                    err = AddPartnerProcess(db, todo, user, partner.PartnerID, utils.ParseUserAgent(request))
-                    if err == nil {
-                        render.JSON(201, &partner)
+                isPartner, err := IsTodoPartner(db, todo, user)
+                if err == nil && isPartner {
+                    if uid != partner.PartnerID {
+                        partner.UserID = uid
+                        err = db.Insert(&partner)
+                        err = AddPartnerProcess(db, todo, user, partner.PartnerID, utils.ParseUserAgent(request))
+                        if err == nil {
+                            render.JSON(201, &partner)
+                        } else {
+                            log.Printf("Add todo partner error: %s", err.Error())
+                            erp := model.Error{Code: model.ERR_REQUEST_FAILED, Msg: err.Error()}
+                            render.JSON(422, erp)
+                        }
                     } else {
                         log.Printf("Add todo partner error: %s", err.Error())
                         erp := model.Error{Code: model.ERR_REQUEST_FAILED, Msg: err.Error()}
                         render.JSON(422, erp)
                     }
                 } else {
-                    log.Printf("Add todo partner error: %s", err.Error())
-                    erp := model.Error{Code: model.ERR_REQUEST_FAILED, Msg: err.Error()}
+                    log.Print("Add todo partner error: has no permission")
+                    erp := model.Error{Code: model.ERR_TODO_USER_PERM, Msg: "No permission!"}
                     render.JSON(422, erp)
                 }
             } else {

@@ -40,6 +40,7 @@ type Todo struct {
 
 	Processes  []*Process   `db:"-"         json:"processes"`
 	Partners   []*Partner   `db:"-"         json:"partners"`
+    Tags       []*TodoTag   `db:"-"         json:"tags"`
 }
 
 type Todos struct {

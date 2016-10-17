@@ -103,8 +103,13 @@ func main() {
 
 			// add todo partner
 			router.Post("/partner", binding.Bind(model.Partner{}), control.AddPartner)
+			router.Post("/tag", binding.Bind(model.TodoTag{}), control.AddTodoTag)
 		})
 
+		app.Group("/tag", func(router martini.Router) {
+            // create tag
+			router.Post("", binding.Bind(model.Tag{}), control.CreateTag)
+		})
 	})
 	app.NotFound(func(render render.Render) {
 		render.JSON(404, "Not Found!")
